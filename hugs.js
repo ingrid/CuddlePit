@@ -28,7 +28,6 @@ function initialize(){
 		fading = true
 	    }
 	    if(fading === true){
-		console.log(fading);
 		if(fadeTime >= fadeInterval){
 		    fading = false;
 		    fadeTime = 0;
@@ -38,7 +37,6 @@ function initialize(){
 		    var volNew = 1 - volOld;
 		    happySong2.volume = volOld;
 		    cuddleSad.volume = volNew;
-		    console.log(volNew);
 		    fadeTime += elapsed;	
 		}	
 	    }
@@ -221,8 +219,17 @@ function initialize(){
             }
         }
     });
-    
+
     enemies = jsGame.CollisionGroup();
+
+    // Average fuzzy level.
+    game.update = jsGame.extend(game.update, function(){
+	    var totalFuzz = 0;
+	    for(var i = 0; i < enemies.getChildren().length; i++){
+		totalFuzz += enemies.getChildren()[i].fuzzies;
+	    }
+	    var avgFuzz = totalFuzz/enemies.children.length;
+	});
 
     makeEnemy = function(x,y)
     {
@@ -235,6 +242,12 @@ function initialize(){
     	enemy.targetX = 0;
     	enemy.targetY = 0;
     	enemy.speed = 100;
+
+	enemy.fuzzies = 100;
+	enemy.health = 100;
+	enemy.state = 'wandering';
+	enemy.attackTimer = 0;
+
         game.add(enemy);
         enemies.add(enemy);
         
@@ -244,46 +257,110 @@ function initialize(){
         }
 
         enemy.update = jsGame.extend(enemy.update, function(elapsed){
-            if(enemy.wanderTimer <= 0)
-            {
-                enemy.wanderTimer = Math.random() * 5 + 1;
-                enemy.targetX = Math.random() * 700 + 50;
-                enemy.targetY = Math.random() * 500 + 50;
-            }
-            enemy.wanderTimer -= elapsed;
+		enemy.fuzzies -= 1;
+		
+		if(enemy.fuzzies <= 15){
+		    enemy.state = 'fighting';
+		}
+		else{
+		    enemy.state = 'wandering';
+		}
 
-    		enemy.velocity.x = 0;
-    		enemy.velocity.y = 0;
-    
-    		// This math might be terrible, should also be moved to mouse listener.
-    		var vec = [];
-    		vec.x = enemy.x - enemy.targetX;
-    		vec.y = enemy.y - enemy.targetY
-    	    var dist = Math.sqrt(vec.x * vec.x + vec.y * vec.y);
-    
-            if(dist != 0)
-            {
-                vec.x /= dist;
-                vec.y /= dist;
-            }
-            else
-            {
-                vec.x = 0;
-                vec.y = -1;
-            }
-    
-    		if(((Math.abs(enemy.x - enemy.targetX) > 20 ) || (Math.abs(enemy.y - enemy.targetY) > 20))){
-    		    enemy.angle = Math.atan2(vec.x, vec.y);
+		if(enemy.health <= 0){
+		    // Play death animation.
+		    enemy.update = function(elapsed){
+		    };
+		    enemy.state = 'dead';
+		}
 
-    		    enemy.velocity.x = -vec.x * enemy.speed;
-    		    enemy.velocity.y = -vec.y * enemy.speed;
-    		    enemy.playAnimation(enemy.walkAnim);
-    		}
-    		else{
-    		    enemy.playAnimation(enemy.idleAnim);
-    		}
-        });
-        
+		else{
+		    if(enemy.state === 'fighting'){
+			if(enemy.fightTarget === undefined){
+			    // Try to find a target.
+			    for(var e = 0; e < enemies.getChildren().length; e++){
+				var candidate = enemies.getChildren()[e];
+				if(candidate.state != 'dead'){
+				    var vec = [];
+				    vec.x = enemy.x - candidate.x;
+				    vec.y = enemy.y - candidate.y;
+				    
+				    dist = Math.sqrt(vec.x * vec.x + vec.y * vec.y);
+				    if(dist <= 30){
+					enemy.fightTarget = candidate;
+				    }
+				}
+			    }
+			}
+			if((enemy.fightTarget === undefined) || (enemy.fightTarget.state ==='dead')){
+			    enemy.fightTarget = undefined;
+			    // Couldn't find a target, fall back to wandering, or enemy is dead.
+			    enemy.state = 'wandering';
+			}else{
+			    if(enemy.attackTimer <= 0){
+				var vec = [];
+				vec.x = enemy.x - enemy.fightTarget.x;
+				vec.y = enemy.y - enemy.fightTarget.y;
+				
+				var dist = Math.sqrt(vec.x * vec.x + vec.y * vec.y);
+				
+				if(dist != 0){
+				    vec.x /= dist;
+				    vec.y /= dist;
+				}
+				else{
+				    vec.x = 0;
+				    vec.y = -1;
+				}
+
+				if(dist <= 5){
+				    enemy.fightTarget.health -= 1;
+				}
+				else{
+				    enemy.attackTimer -= game.elapsed;
+				}
+			    }
+			}
+		    }
+		}
+		if(enemy.state === 'wandering'){
+		    if(enemy.wanderTimer <= 0){
+			enemy.wanderTimer = Math.random() * 5 + 1;
+			enemy.targetX = Math.random() * 700 + 50;
+			enemy.targetY = Math.random() * 500 + 50;
+		    }
+		    enemy.wanderTimer -= elapsed;
+		    
+		    enemy.velocity.x = 0;
+		    enemy.velocity.y = 0;
+		    
+		    // This math might be terrible, should also be moved to mouse listener.
+		    var vec = [];
+		    vec.x = enemy.x - enemy.targetX;
+		    vec.y = enemy.y - enemy.targetY;
+		    var dist = Math.sqrt(vec.x * vec.x + vec.y * vec.y);
+		    
+		    if(dist != 0){
+			vec.x /= dist;
+			vec.y /= dist;
+		    }
+		    else{
+			vec.x = 0;
+			vec.y = -1;
+		    }
+		    
+		    if(((Math.abs(enemy.x - enemy.targetX) > 20 ) || (Math.abs(enemy.y - enemy.targetY) > 20))){
+			enemy.angle = Math.atan2(vec.x, vec.y);
+			
+			enemy.velocity.x = -vec.x * enemy.speed;
+			enemy.velocity.y = -vec.y * enemy.speed;
+			enemy.playAnimation(enemy.walkAnim);
+		    }
+		    else{
+			enemy.playAnimation(enemy.idleAnim);
+		    }
+		}
+	    });
+	
     	enemy.render = function(context, camera){
     		if(enemy.image !== null && enemy.visible){
     		    context.save();
