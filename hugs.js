@@ -8,6 +8,7 @@ window.onload = function(){
 function initialize(){
 	var game = jsGame.Game(800, 600);
 	var overload = jsGame.Sound.play('./assets/overload.wav');
+	var justClicked = false;
 	overload.loop = true;
 	//	var happySong2 = jsGame.Sound.play('./assets/cuddlehappy2.wav');
 	//	happySong2.loop = true;
@@ -30,21 +31,37 @@ function initialize(){
 	    guide.y = mouseY;
 	};
 
-       	var player = jsGame.Sprite(300, 150);
-	player.setImage('./assets/penguin.png', 80, 80);
-	var walkAnim = jsGame.Animation.Strip([1, 2, 3, 4, 5, 6], 80, 80, 4.0);
-	var idleAnim = jsGame.Animation.Strip([0, 1], 80, 80, 1.0);
-	player.playAnimation(walkAnim);
-       	game.add(player);
+	game._canvas.onmousedown = function(e)
+	{
+        justClicked = true;
+    }
+
+    var player = jsGame.Sprite(300, 150);
 
 	var guide = [];
 	guide.x = 0;
 	guide.y = 0;
 
+	player.setImage('./assets/penguin.png', 80, 80);
+	var walkAnim = jsGame.Animation.Strip([1, 2, 3, 4, 5, 6], 80, 80, 7.0);
+	var idleAnim = jsGame.Animation.Strip([0, 1], 80, 80, 1.0);
+	player.playAnimation(walkAnim);
+    game.add(player);
+    
+	player.hugarms = {left: [{x:0, y:0}, {x:-10, y:-20}], right: [{x:0, y:0}, {x:10, y:-20}] };
+	player.hugging = false;
+    player.hugMagnitude = 0;
+    player.hugMagSpeed = 320;
+    player.hugAngleSpeed = 3.0;
+    player.hugMaxMagnitude = 100;
+    player.hugStartAngle = Math.PI / 4;
+    player.hugAngle = 0;
+    player.hugMinAngle = -0.2
+    
 	player.angle = 0;
 	player.speed = 120;
 
-       	player.update = jsGame.extend(player.update, function(elapsed){
+    player.update = jsGame.extend(player.update, function(elapsed){
 		player.velocity.x = 0;
 		player.velocity.y = 0;
 
@@ -52,13 +69,22 @@ function initialize(){
 		var vec = [];
 		vec.x = player.x - guide.x;
 		vec.y = player.y - guide.y;
-		if((Math.abs(player.x - guide.x) >= 1 ) && (Math.abs(player.y - guide.y) >= 5)){
+	    var dist = Math.sqrt(vec.x * vec.x + vec.y * vec.y);
+
+        if(dist != 0)
+        {
+            vec.x /= dist;
+            vec.y /= dist;
+        }
+        else
+        {
+            vec.x = 0;
+            vec.y = -1;
+        }
+
+		if(((Math.abs(player.x - guide.x) > 20 ) || (Math.abs(player.y - guide.y) > 20)) && !player.hugging){
 		    player.angle = Math.atan2(vec.x, vec.y);
 
-		    var dist = Math.sqrt(vec.x * vec.x + vec.y * vec.y);
-
-		    vec.x /= dist;
-		    vec.y /= dist;
 		    player.velocity.x = -vec.x * player.speed;
 		    player.velocity.y = -vec.y * player.speed;
 		    player.playAnimation(walkAnim);
@@ -66,7 +92,35 @@ function initialize(){
 		else{
 		    player.playAnimation(idleAnim);
 		}
-		
+
+        if(justClicked && !player.hugging)
+        {
+            player.hugging = true;
+            player.hugMagnitude = 0;
+            player.hugAngle = player.hugStartAngle;
+        }
+        if(player.hugging)
+        {
+            player.hugMagnitude = Math.min(player.hugMagnitude + game.elapsed * player.hugMagSpeed, player.hugMaxMagnitude);
+            if(player.hugMagnitude >= player.hugMaxMagnitude)
+            {
+                player.hugAngle = Math.max(player.hugAngle - game.elapsed * player.hugAngleSpeed, player.hugMinAngle);
+                if(player.hugAngle <= player.hugMinAngle)
+                {
+                    player.hugging = false;
+                    player.hugMagnitude = 0;
+                }
+            }
+        }
+
+        leftArmStart = {x: Math.sin(-player.angle-Math.PI/2) * 20, y: -Math.cos(-player.angle-Math.PI/2) * 20}
+        rightArmStart = {x: Math.sin(-player.angle+Math.PI/2) * 20, y: -Math.cos(-player.angle+Math.PI/2) * 20}
+        leftArmAngle = player.angle + player.hugAngle;
+        leftArmEnd = {x: leftArmStart.x + Math.sin(-leftArmAngle) * player.hugMagnitude, y: leftArmStart.y + -Math.cos(-leftArmAngle) * player.hugMagnitude}
+        rightArmAngle = player.angle - player.hugAngle;
+        rightArmEnd = {x: rightArmStart.x + Math.sin(-rightArmAngle) * player.hugMagnitude, y: rightArmStart.y + -Math.cos(-rightArmAngle) * player.hugMagnitude}
+        player.hugarms.left = [leftArmStart, leftArmEnd];
+        player.hugarms.right = [rightArmStart, rightArmEnd];
 	    });
 
 	player.render = function(context, camera){
@@ -86,6 +140,133 @@ function initialize(){
 			context.restore();
 		}
 	};
+
+	game.render = jsGame.extend(game.render, function(context, camera){
+        game._context.strokeStyle = "rgb(255,0,0)";
+        game._context.beginPath();
+        game._context.moveTo(player.hugarms.left[0].x + player.x,player.hugarms.left[0].y + player.y);
+        game._context.lineTo(player.hugarms.left[1].x + player.x,player.hugarms.left[1].y + player.y);
+        game._context.closePath();
+        game._context.stroke();
+        game._context.beginPath();
+        game._context.moveTo(player.hugarms.right[0].x + player.x,player.hugarms.right[0].y + player.y);
+        game._context.lineTo(player.hugarms.right[1].x + player.x,player.hugarms.right[1].y + player.y);
+        game._context.closePath();
+        game._context.stroke();
+    });
+    
+    game.update = jsGame.extend(game.update, function(){
+        justClicked = false;
+
+        var cd = 50;
+        for(var i in game._children)
+        {
+            var o1 = game._children[i];
+            for(var j in game._children)
+            {
+                if(i == j) { continue; }
+                var o2 = game._children[j];
+                var dx = o1.x - o2.x;
+                var dy = o1.y - o2.y;
+                if(dx * dx + dy * dy <= cd*cd)
+                {
+                    var d = Math.sqrt(dx*dx+dy*dy);
+                    dx /= d;
+                    dy /= d;
+                    if(o1 != player)
+                    {
+                        o1.x += dx * 3;
+                        o1.y += dy * 3;
+                    }
+                }
+            }
+        }
+    });
+    
+    enemies = jsGame.CollisionGroup();
+
+    makeEnemy = function(x,y)
+    {
+        var enemy = jsGame.Sprite(x, y);
+        enemy.setImage('./assets/fluff.png', 80, 80);
+    	enemy.walkAnim = jsGame.Animation.Strip([0], 80, 80, 7.0);
+    	enemy.idleAnim = jsGame.Animation.Strip([0], 80, 80, 1.0);
+    	enemy.playAnimation(enemy.walkAnim);
+    	enemy.wanderTimer = 0;
+    	enemy.targetX = 0;
+    	enemy.targetY = 0;
+    	enemy.speed = 100;
+        game.add(enemy);
+        enemies.add(enemy);
+        
+        if(player.hugging)
+        {
+             
+        }
+
+        enemy.update = jsGame.extend(enemy.update, function(elapsed){
+            if(enemy.wanderTimer <= 0)
+            {
+                enemy.wanderTimer = Math.random() * 5 + 1;
+                enemy.targetX = Math.random() * 700 + 50;
+                enemy.targetY = Math.random() * 500 + 50;
+            }
+            enemy.wanderTimer -= elapsed;
+
+    		enemy.velocity.x = 0;
+    		enemy.velocity.y = 0;
+    
+    		// This math might be terrible, should also be moved to mouse listener.
+    		var vec = [];
+    		vec.x = enemy.x - enemy.targetX;
+    		vec.y = enemy.y - enemy.targetY
+    	    var dist = Math.sqrt(vec.x * vec.x + vec.y * vec.y);
+    
+            if(dist != 0)
+            {
+                vec.x /= dist;
+                vec.y /= dist;
+            }
+            else
+            {
+                vec.x = 0;
+                vec.y = -1;
+            }
+    
+    		if(((Math.abs(enemy.x - enemy.targetX) > 20 ) || (Math.abs(enemy.y - enemy.targetY) > 20))){
+    		    enemy.angle = Math.atan2(vec.x, vec.y);
+
+    		    enemy.velocity.x = -vec.x * enemy.speed;
+    		    enemy.velocity.y = -vec.y * enemy.speed;
+    		    enemy.playAnimation(enemy.walkAnim);
+    		}
+    		else{
+    		    enemy.playAnimation(enemy.idleAnim);
+    		}
+        });
+        
+    	enemy.render = function(context, camera){
+    		if(enemy.image !== null && enemy.visible){
+    		    context.save();
+    		    context.translate(enemy.x, enemy.y);
+    		    context.rotate(-(enemy.angle));
+    		    context.drawImage(enemy.image,
+    				      enemy.frame.x,
+    				      enemy.frame.y,
+    				      enemy.width,
+    				      enemy.height,
+    				      -enemy.width/2,
+    				      -enemy.height/2,
+    				      enemy.width,
+    				      enemy.height);
+    			context.restore();
+    		}
+    	};
+    }
+    for(var i = 0; i < 20; i++)
+    {
+        makeEnemy(Math.random()*700+50,Math.random()*500+50);
+    }
 
 	game.run();
 }
