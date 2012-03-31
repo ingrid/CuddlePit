@@ -23,6 +23,8 @@ jsGame.Sound = function(){
 			load(url);
 		}
 		cache[url].play();
+
+		return cache[url];
 	};
 
 	return {
