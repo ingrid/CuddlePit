@@ -261,7 +261,7 @@ function initialize(){
         enemies.add(enemy);
 	
         enemy.update = jsGame.extend(enemy.update, function(elapsed){
-		enemy.fuzzies -= 1;
+		enemy.fuzzies = Math.max(enemy.fuzzies - 1, 0);
 		
 		if(enemy.fuzzies <= 15){
 		    enemy.state = 'fighting';
@@ -277,51 +277,50 @@ function initialize(){
 		    enemy.state = 'dead';
 		}
 		
-		else{
-		    if(enemy.state === 'fighting'){
-			if(enemy.fightTarget === undefined){
-			    // Try to find a target.
-			    for(var e = 0; e < enemies.getChildren().length; e++){
-				var candidate = enemies.getChildren()[e];
-				if(candidate.state != 'dead'){
-				    var vec = [];
-				    vec.x = enemy.x - candidate.x;
-				    vec.y = enemy.y - candidate.y;
-				    
-				    dist = Math.sqrt(vec.x * vec.x + vec.y * vec.y);
-				    if(dist <= 30){
-					enemy.fightTarget = candidate;
-				    }
+		if(enemy.state === 'fighting'){
+		    if(enemy.fightTarget === undefined){
+			// Try to find a target.
+			for(var e = 0; e < enemies.getChildren().length; e++){
+			    var candidate = enemies.getChildren()[e];
+			    if(candidate.state != 'dead'){
+				var vec = [];
+				vec.x = enemy.x - candidate.x;
+				vec.y = enemy.y - candidate.y;
+				
+				dist = Math.sqrt(vec.x * vec.x + vec.y * vec.y);
+				if(dist <= 30){
+				    enemy.fightTarget = candidate;
 				}
 			    }
 			}
-			if((enemy.fightTarget === undefined) || (enemy.fightTarget.state ==='dead')){
-			    enemy.fightTarget = undefined;
-			    // Couldn't find a target, fall back to wandering, or enemy is dead.
-			    enemy.state = 'wandering';
-			}else{
-			    if(enemy.attackTimer <= 0){
-				var vec = [];
-				vec.x = enemy.x - enemy.fightTarget.x;
-				vec.y = enemy.y - enemy.fightTarget.y;
-				
-				var dist = Math.sqrt(vec.x * vec.x + vec.y * vec.y);
-				
-				if(dist != 0){
-				    vec.x /= dist;
-				    vec.y /= dist;
-				}
-				else{
-				    vec.x = 0;
-				    vec.y = -1;
-				}
-				
-				if(dist <= 5){
-				    enemy.fightTarget.health -= 1;
-				}
-				else{
-				    enemy.attackTimer -= game.elapsed;
-				}
+		    }
+		    if((enemy.fightTarget === undefined) || (enemy.fightTarget.state ==='dead')){
+			enemy.fightTarget = undefined;
+			// Couldn't find a target, fall back to wandering, or enemy is dead.
+			enemy.state = 'wandering';
+		    }else{
+			if(enemy.attackTimer <= 0){
+			    var vec = [];
+			    vec.x = enemy.x - enemy.fightTarget.x;
+			    vec.y = enemy.y - enemy.fightTarget.y;
+			    
+			    var dist = Math.sqrt(vec.x * vec.x + vec.y * vec.y);
+			    
+			    if(dist != 0){
+				vec.x /= dist;
+				vec.y /= dist;
+			    }
+			    else{
+				vec.x = 0;
+				vec.y = -1;
+			    }
+			    
+			    if(dist <= 5){
+				enemy.fightTarget.health -= 1;
+				enemy.attackTimer = 5;
+			    }
+			    else{
+				enemy.attackTimer -= game.elapsed;
 			    }
 			}
 		    }
@@ -406,37 +405,37 @@ function initialize(){
 			}
 		}
 	    });
+	
+	enemy.render = function(context, camera){
+	    context.fillStyle = "rgba(0,0,0,0.2)";
+	    context.beginPath();
+	    context.arc(enemy.x + 5, enemy.y + 7, 20, 0, Math.PI*2, true);
+	    context.closePath();
+	    context.fill();
 	    
-	    enemy.render = function(context, camera){
-		context.fillStyle = "rgba(0,0,0,0.2)";
-		context.beginPath();
-		context.arc(enemy.x + 5, enemy.y + 7, 20, 0, Math.PI*2, true);
-		context.closePath();
-		context.fill();
-		
-    		if(enemy.image !== null && enemy.visible){
-    		    context.save();
-    		    context.translate(enemy.x, enemy.y);
-    		    context.rotate(-(enemy.angle));
-    		    context.drawImage(enemy.image,
-    				      enemy.frame.x,
-    				      enemy.frame.y,
-    				      enemy.width,
-    				      enemy.height,
-    				      -enemy.width/2,
-    				      -enemy.height/2,
-    				      enemy.width,
-    				      enemy.height);
-    			context.restore();
-    		}
-    	};
+	    if(enemy.image !== null && enemy.visible){
+		context.save();
+		context.translate(enemy.x, enemy.y);
+		context.rotate(-(enemy.angle));
+		context.drawImage(enemy.image,
+				  enemy.frame.x,
+				  enemy.frame.y,
+				  enemy.width,
+				  enemy.height,
+				  -enemy.width/2,
+				  -enemy.height/2,
+				  enemy.width,
+				  enemy.height);
+		context.restore();
+	    }
+	};
     }
     for(var i = 0; i < 15; i++)
-    {
-        makeEnemy(Math.random()*700+50,Math.random()*500+50);
-    }
+	{
+	    makeEnemy(Math.random()*700+50,Math.random()*500+50);
+	}
     
     game.add(bg);
-
-	game.run();
+    
+    game.run();
 }
