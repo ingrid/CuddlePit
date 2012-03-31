@@ -15,6 +15,10 @@ function initialize(){
 	cuddleSad.loop = true;
 	cuddleSad.volume = 0;
 	cuddleSad.play();
+	
+	var bg = jsGame.Sprite(0,0);
+	bg.setImage("./assets/bg.png");
+
 
 	var fading = false;
 	var fadeTime = 0;
@@ -83,7 +87,7 @@ function initialize(){
 
 	player.setImage('./assets/penguin.png', 80, 80);
 	var walkAnim = jsGame.Animation.Strip([1, 2, 3, 4, 5, 6], 80, 80, 7.0);
-	var idleAnim = jsGame.Animation.Strip([0, 1], 80, 80, 1.0);
+	var idleAnim = jsGame.Animation.Strip([0], 80, 80, 1.0);
 	player.playAnimation(walkAnim);
     game.add(player);
     
@@ -92,7 +96,7 @@ function initialize(){
     player.hugMagnitude = 0;
     player.hugMagSpeed = 360;
     player.hugAngleSpeed = 3.0;
-    player.hugMaxMagnitude = 140;
+    player.hugMaxMagnitude = 100;
     player.hugStartAngle = Math.PI / 4;
     player.hugAngle = 0;
     player.hugMinAngle = -0.2
@@ -165,6 +169,11 @@ function initialize(){
 	    });
 
 	player.render = function(context, camera){
+        context.fillStyle = "rgba(0,0,0,0.2)";
+        context.beginPath();
+        context.arc(player.x + 5, player.y + 7, 25, 0, Math.PI*2, true);
+        context.closePath();
+        context.fill();
 		if(player.image !== null && player.visible){
 		    context.save();
 		    context.translate(player.x, player.y);
@@ -228,7 +237,7 @@ function initialize(){
     {
         var enemy = jsGame.Sprite(x, y);
         enemy.setImage('./assets/fluff.png', 80, 80);
-    	enemy.walkAnim = jsGame.Animation.Strip([0], 80, 80, 7.0);
+    	enemy.walkAnim = jsGame.Animation.Strip([1,2,3,4,5,6], 80, 80, 7.0);
     	enemy.idleAnim = jsGame.Animation.Strip([0], 80, 80, 1.0);
     	enemy.playAnimation(enemy.walkAnim);
     	enemy.wanderTimer = 0;
@@ -301,8 +310,8 @@ function initialize(){
                     ldx = leftProj.x - (enemy.x - arm[0].x - player.x); ldy = leftProj.y - (enemy.y - arm[0].y - player.y);
                     if( ldx*ldx+ldy*ldy <= 50)
                     {
-                        dx = enemy.x - (player.x + player.forward.x * -60);
-                        dy = enemy.y - (player.y + player.forward.y * -60);
+                        dx = enemy.x - (player.x + player.forward.x * -80);
+                        dy = enemy.y - (player.y + player.forward.y * -80);
                         d = Math.sqrt(dx*dx+dy*dy);
                         if(d > 0)
                         {
@@ -321,6 +330,12 @@ function initialize(){
         });
 
     	enemy.render = function(context, camera){
+            context.fillStyle = "rgba(0,0,0,0.2)";
+            context.beginPath();
+            context.arc(enemy.x + 5, enemy.y + 7, 20, 0, Math.PI*2, true);
+            context.closePath();
+            context.fill();
+
     		if(enemy.image !== null && enemy.visible){
     		    context.save();
     		    context.translate(enemy.x, enemy.y);
@@ -342,6 +357,8 @@ function initialize(){
     {
         makeEnemy(Math.random()*700+50,Math.random()*500+50);
     }
+    
+    game.add(bg);
 
 	game.run();
 }
