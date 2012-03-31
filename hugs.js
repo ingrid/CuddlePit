@@ -1,14 +1,16 @@
 window.onload = function(){
     jsGame.Sound.load('./assets/cuddlehappy2.wav');
     jsGame.Sound.load('./assets/cuddlesad.mp3');
+    jsGame.Sound.load('./assets/overload.wav');
     initialize();
 }
 
 function initialize(){
 	var game = jsGame.Game(800, 600);
-
-	var happySong2 = jsGame.Sound.play('./assets/cuddlehappy2.wav');
-	happySong2.loop = true;
+	var overload = jsGame.Sound.play('./assets/overload.wav');
+	overload.loop = true;
+	//	var happySong2 = jsGame.Sound.play('./assets/cuddlehappy2.wav');
+	//	happySong2.loop = true;
 
 	// Dumb way to put a border around the game.
 	game._canvas.style.border="1px solid black";
@@ -29,10 +31,10 @@ function initialize(){
 	};
 
        	var player = jsGame.Sprite(300, 150);
-	player.setImage('./assets/sheet.png', 80, 80);
-	var walkAnim = jsGame.Animation.Strip([0, 1, 2, 3, 4, 5], 80, 80, 4.0);
-	var idleAnim = jsGame.Animation.Strip([0], 80, 80, 1.0);
-	player.playAnimation(walkAnim);
+	player.setImage('./assets/penguin_idle.png', 80, 80);
+	//	var walkAnim = jsGame.Animation.Strip([0, 1, 2, 3, 4, 5], 80, 80, 4.0);
+	//	var idleAnim = jsGame.Animation.Strip([0], 80, 80, 1.0);
+	//	player.playAnimation(walkAnim);
        	game.add(player);
 
 	var guide = [];
@@ -59,24 +61,25 @@ function initialize(){
 		    vec.y /= dist;
 		    player.velocity.x = -vec.x * player.speed;
 		    player.velocity.y = -vec.y * player.speed;
-		    player.playAnimation(walkAnim);
+		    //		    player.playAnimation(walkAnim);
 		}
 		else{
-		    player.playAnimation(idleAnim);
+		    //		    player.playAnimation(idleAnim);
 		}
 		
 	    });
 
 	player.render = function(context, camera){
 		if(player.image !== null && player.visible){
-		    console.log(player.x);
 		    context.save();
 		    context.translate(player.x, player.y);
-		    context.rotate(-(player.angle + 1.5));
+		    context.rotate(-(player.angle));
        		    //context.setTransform(1,0,0,1,0,0);
 		    context.drawImage(player.image,
-					  player.frame.x,
-					  player.frame.y,
+				      //					  player.frame.x,
+				      //					  player.frame.y,
+				      0,
+				      0,
 					  player.width,
 					  player.height,
 					  -player.width/2,
