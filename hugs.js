@@ -31,10 +31,10 @@ function initialize(){
 	};
 
        	var player = jsGame.Sprite(300, 150);
-	player.setImage('./assets/penguin_idle.png', 80, 80);
-	//	var walkAnim = jsGame.Animation.Strip([0, 1, 2, 3, 4, 5], 80, 80, 4.0);
-	//	var idleAnim = jsGame.Animation.Strip([0], 80, 80, 1.0);
-	//	player.playAnimation(walkAnim);
+	player.setImage('./assets/penguin.png', 80, 80);
+	var walkAnim = jsGame.Animation.Strip([1, 2, 3, 4, 5, 6], 80, 80, 4.0);
+	var idleAnim = jsGame.Animation.Strip([0, 1], 80, 80, 1.0);
+	player.playAnimation(walkAnim);
        	game.add(player);
 
 	var guide = [];
@@ -61,10 +61,10 @@ function initialize(){
 		    vec.y /= dist;
 		    player.velocity.x = -vec.x * player.speed;
 		    player.velocity.y = -vec.y * player.speed;
-		    //		    player.playAnimation(walkAnim);
+		    player.playAnimation(walkAnim);
 		}
 		else{
-		    //		    player.playAnimation(idleAnim);
+		    player.playAnimation(idleAnim);
 		}
 		
 	    });
@@ -74,18 +74,15 @@ function initialize(){
 		    context.save();
 		    context.translate(player.x, player.y);
 		    context.rotate(-(player.angle));
-       		    //context.setTransform(1,0,0,1,0,0);
 		    context.drawImage(player.image,
-				      //					  player.frame.x,
-				      //					  player.frame.y,
-				      0,
-				      0,
-					  player.width,
-					  player.height,
-					  -player.width/2,
-					  -player.height/2,
-					  player.width,
-					  player.height);
+				      player.frame.x,
+				      player.frame.y,
+				      player.width,
+				      player.height,
+				      -player.width/2,
+				      -player.height/2,
+				      player.width,
+				      player.height);
 			context.restore();
 		}
 	};
