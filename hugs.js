@@ -240,9 +240,8 @@ function initialize(){
 	    var avgFuzz = totalFuzz/enemies.children.length;
 	});
 
-    makeEnemy = function(x,y)
-    {
-        var enemy = jsGame.Sprite(x, y);
+    makeEnemy = function(x,y){
+	var enemy = jsGame.Sprite(x, y);
         enemy.setImage('./assets/fluff.png', 80, 80);
     	enemy.walkAnim = jsGame.Animation.Strip([1,2,3,4,5,6], 80, 80, 7.0);
     	enemy.idleAnim = jsGame.Animation.Strip([0], 80, 80, 1.0);
@@ -250,17 +249,17 @@ function initialize(){
     	enemy.wanderTimer = 0;
     	enemy.targetX = 0;
     	enemy.targetY = 0;
-
+	
 	enemy.fuzzies = 100;
 	enemy.health = 100;
 	enemy.state = 'wandering';
 	enemy.attackTimer = 0;
-
+	
     	enemy.speed = 70;
     	enemy.collisionRadius = 10;
         game.add(enemy);
         enemies.add(enemy);
-
+	
         enemy.update = jsGame.extend(enemy.update, function(elapsed){
 		enemy.fuzzies -= 1;
 		
@@ -270,14 +269,14 @@ function initialize(){
 		else{
 		    enemy.state = 'wandering';
 		}
-
+		
 		if(enemy.health <= 0){
 		    // Play death animation.
 		    enemy.update = function(elapsed){
 		    };
 		    enemy.state = 'dead';
 		}
-
+		
 		else{
 		    if(enemy.state === 'fighting'){
 			if(enemy.fightTarget === undefined){
@@ -316,7 +315,7 @@ function initialize(){
 				    vec.x = 0;
 				    vec.y = -1;
 				}
-
+				
 				if(dist <= 5){
 				    enemy.fightTarget.health -= 1;
 				}
@@ -341,17 +340,22 @@ function initialize(){
 		    // This math might be terrible, should also be moved to mouse listener.
 		    var vec = [];
 		    vec.x = enemy.x - enemy.targetX;
-		    vec.y = enemy.y - enemy.targetY;
+		    vec.y = enemy.y - enemy.targetY
 		    var dist = Math.sqrt(vec.x * vec.x + vec.y * vec.y);
 		    
-		    if(dist != 0){
-			vec.x /= dist;
-			vec.y /= dist;
-		    }
-		    else{
-			vec.x = 0;
-			vec.y = -1;
-		    }
+		    if(dist != 0)
+			{
+			    vec.x /= dist;
+			    vec.y /= dist;
+			}
+		    else
+			{
+			    vec.x = 0;
+			    vec.y = -1;
+			}
+		    
+		    enemy.collisionRadius = Math.min(enemy.collisionRadius + elapsed * 20, 10);
+		    
 		    
 		    if(((Math.abs(enemy.x - enemy.targetX) > 20 ) || (Math.abs(enemy.y - enemy.targetY) > 20))){
 			enemy.angle = Math.atan2(vec.x, vec.y);
@@ -363,88 +367,53 @@ function initialize(){
 		    else{
 			enemy.playAnimation(enemy.idleAnim);
 		    }
+		    
+		    if(player.hugging)
+			{
+			    project = function(ax,ay,bx,by)
+			    {
+				d = (bx*bx+by*by);
+				dot = bx * ax + by * ay;
+				temp = dot/d;
+				return {x:bx*temp, y:by*temp};
+			    };
+			    testArm = function(arm)
+			    {
+				leftProj = project(enemy.x - arm[0].x - player.x, enemy.y - arm[0].y - player.y,
+						   arm[1].x - arm[0].x,
+						   arm[1].y - arm[0].y);
+				if(leftProj.x * leftProj.x + leftProj.y * leftProj.y <= player.hugMagnitude * player.hugMagnitude)
+				    {
+					ldx = leftProj.x - (enemy.x - arm[0].x - player.x); ldy = leftProj.y - (enemy.y - arm[0].y - player.y);
+					if( ldx*ldx+ldy*ldy <= 50)
+					    {
+						dx = enemy.x - (player.x + player.forward.x * -80);
+						dy = enemy.y - (player.y + player.forward.y * -80);
+						d = Math.sqrt(dx*dx+dy*dy);
+						if(d > 0)
+						    {
+							enemy.x += -dx / d * 2;
+							enemy.y += -dy / d * 2;
+						    }
+						enemy.targetX = player.x;
+						enemy.targetY = player.y;
+						enemy.collisionRadius = 3;
+					    }
+				    }
+			    }
+			    testArm(player.hugarms.left);
+			    testArm(player.hugarms.right);
+			}
 		}
 	    });
-	
-    		enemy.velocity.x = 0;
-    		enemy.velocity.y = 0;
-    
-    		// This math might be terrible, should also be moved to mouse listener.
-    		var vec = [];
-    		vec.x = enemy.x - enemy.targetX;
-    		vec.y = enemy.y - enemy.targetY
-    	    var dist = Math.sqrt(vec.x * vec.x + vec.y * vec.y);
-    
-            if(dist != 0)
-            {
-                vec.x /= dist;
-                vec.y /= dist;
-            }
-            else
-            {
-                vec.x = 0;
-                vec.y = -1;
-            }
-            
-            enemy.collisionRadius = Math.min(enemy.collisionRadius + elapsed * 20, 10);
-
-
-    		if(((Math.abs(enemy.x - enemy.targetX) > 20 ) || (Math.abs(enemy.y - enemy.targetY) > 20))){
-    		    enemy.angle = Math.atan2(vec.x, vec.y);
-
-    		    enemy.velocity.x = -vec.x * enemy.speed;
-    		    enemy.velocity.y = -vec.y * enemy.speed;
-    		    enemy.playAnimation(enemy.walkAnim);
-    		}
-    		else{
-    		    enemy.playAnimation(enemy.idleAnim);
-    		}
-    		
-            if(player.hugging)
-            {
-                project = function(ax,ay,bx,by)
-                {
-                    d = (bx*bx+by*by);
-                    dot = bx * ax + by * ay;
-                    temp = dot/d;
-                    return {x:bx*temp, y:by*temp};
-                };
-                testArm = function(arm)
-                {
-                  leftProj = project(enemy.x - arm[0].x - player.x, enemy.y - arm[0].y - player.y,
-                                      arm[1].x - arm[0].x,
-                                      arm[1].y - arm[0].y);
-                  if(leftProj.x * leftProj.x + leftProj.y * leftProj.y <= player.hugMagnitude * player.hugMagnitude)
-                  {
-                    ldx = leftProj.x - (enemy.x - arm[0].x - player.x); ldy = leftProj.y - (enemy.y - arm[0].y - player.y);
-                    if( ldx*ldx+ldy*ldy <= 50)
-                    {
-                        dx = enemy.x - (player.x + player.forward.x * -80);
-                        dy = enemy.y - (player.y + player.forward.y * -80);
-                        d = Math.sqrt(dx*dx+dy*dy);
-                        if(d > 0)
-                        {
-                          enemy.x += -dx / d * 2;
-                          enemy.y += -dy / d * 2;
-                        }
-                        enemy.targetX = player.x;
-                        enemy.targetY = player.y;
-                        enemy.collisionRadius = 3;
-                    }
-                  }
-                }
-                testArm(player.hugarms.left);
-                testArm(player.hugarms.right);
-            }
-        });
-
-    	enemy.render = function(context, camera){
-            context.fillStyle = "rgba(0,0,0,0.2)";
-            context.beginPath();
-            context.arc(enemy.x + 5, enemy.y + 7, 20, 0, Math.PI*2, true);
-            context.closePath();
-            context.fill();
-
+	    
+	    enemy.render = function(context, camera){
+		context.fillStyle = "rgba(0,0,0,0.2)";
+		context.beginPath();
+		context.arc(enemy.x + 5, enemy.y + 7, 20, 0, Math.PI*2, true);
+		context.closePath();
+		context.fill();
+		
     		if(enemy.image !== null && enemy.visible){
     		    context.save();
     		    context.translate(enemy.x, enemy.y);
