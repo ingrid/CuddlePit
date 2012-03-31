@@ -1,17 +1,56 @@
 window.onload = function(){
     jsGame.Sound.load('./assets/cuddlehappy2.wav');
     jsGame.Sound.load('./assets/cuddlesad.mp3');
-    jsGame.Sound.load('./assets/overload.wav');
     initialize();
 }
 
 function initialize(){
 	var game = jsGame.Game(800, 600);
+
+	var happySong2 = jsGame.Sound.load('./assets/cuddlehappy2.wav');
+	happySong2.loop = true;
+	happySong2.play();
+
+	var cuddleSad = jsGame.Sound.load('./assets/cuddlesad.mp3');
+	cuddleSad.loop = true;
+	cuddleSad.volume = 0;
+	cuddleSad.play();
+
+	var fading = false;
+	var fadeTime = 0;
+	var volOld = 1;
+	var volNew = 0;
+	var fadeInterval = 15;
+	var fadeFlag = false;
+	context = game._canvas.getContext('2d');
+	game.music = function(elapsed){
+	    if((fading === false) && (fadeFlag === true)){
+		fading = true
+	    }
+	    if(fading === true){
+		console.log(fading);
+		if(fadeTime >= fadeInterval){
+		    fading = false;
+		    fadeTime = 0;
+		}
+		else{
+		    var volOld = Math.cos(fadeTime/fadeInterval * Math.PI) * 0.5 + 0.5;
+		    var volNew = 1 - volOld;
+		    happySong2.volume = volOld;
+		    cuddleSad.volume = volNew;
+		    console.log(volNew);
+		    fadeTime += elapsed;	
+		}	
+	    }
+	};
+	
+	game.update = jsGame.extend(game.update, function(){
+		game.music(game.elapsed);
+	    });
+
 	var overload = jsGame.Sound.play('./assets/overload.wav');
 	var justClicked = false;
 	overload.loop = true;
-	//	var happySong2 = jsGame.Sound.play('./assets/cuddlehappy2.wav');
-	//	happySong2.loop = true;
 
 	// Dumb way to put a border around the game.
 	game._canvas.style.border="1px solid black";

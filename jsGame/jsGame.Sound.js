@@ -10,10 +10,13 @@ jsGame.Sound = function(){
 	// Load will create an html5 audio tag and store the object in
 	// the cache, keyed by its url
 	var load = function(url){
+	    if(cache[url] === undefined){		
 		var aud = document.createElement('audio');
 		aud.setAttribute('src', url);
 		aud.load();
 		cache[url] = aud;
+	    }
+		return cache[url]
 	};
 
 	// Play just calls the audio tag play function, or loads it first
