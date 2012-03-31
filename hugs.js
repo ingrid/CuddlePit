@@ -15,6 +15,10 @@ function initialize(){
 	cuddleSad.loop = true;
 	cuddleSad.volume = 0;
 	cuddleSad.play();
+	
+	var bg = jsGame.Sprite(0,0);
+	bg.setImage("./assets/bg.png");
+
 
 	var fading = false;
 	var fadeTime = 0;
@@ -81,14 +85,14 @@ function initialize(){
 
 	player.setImage('./assets/penguin.png', 80, 80);
 	var walkAnim = jsGame.Animation.Strip([1, 2, 3, 4, 5, 6], 80, 80, 7.0);
-	var idleAnim = jsGame.Animation.Strip([0, 1], 80, 80, 1.0);
+	var idleAnim = jsGame.Animation.Strip([0], 80, 80, 1.0);
 	player.playAnimation(walkAnim);
     game.add(player);
     
 	player.hugarms = {left: [{x:0, y:0}, {x:-10, y:-20}], right: [{x:0, y:0}, {x:10, y:-20}] };
 	player.hugging = false;
     player.hugMagnitude = 0;
-    player.hugMagSpeed = 320;
+    player.hugMagSpeed = 360;
     player.hugAngleSpeed = 3.0;
     player.hugMaxMagnitude = 100;
     player.hugStartAngle = Math.PI / 4;
@@ -97,6 +101,7 @@ function initialize(){
     
 	player.angle = 0;
 	player.speed = 120;
+	player.collisionRadius = 25;
 
     player.update = jsGame.extend(player.update, function(elapsed){
 		player.velocity.x = 0;
@@ -118,6 +123,7 @@ function initialize(){
             vec.x = 0;
             vec.y = -1;
         }
+        player.forward = vec;
 
 		if(((Math.abs(player.x - guide.x) > 20 ) || (Math.abs(player.y - guide.y) > 20)) && !player.hugging){
 		    player.angle = Math.atan2(vec.x, vec.y);
@@ -161,6 +167,11 @@ function initialize(){
 	    });
 
 	player.render = function(context, camera){
+        context.fillStyle = "rgba(0,0,0,0.2)";
+        context.beginPath();
+        context.arc(player.x + 5, player.y + 7, 25, 0, Math.PI*2, true);
+        context.closePath();
+        context.fill();
 		if(player.image !== null && player.visible){
 		    context.save();
 		    context.translate(player.x, player.y);
@@ -177,7 +188,7 @@ function initialize(){
 			context.restore();
 		}
 	};
-
+    proj = {x:0, y:0};
 	game.render = jsGame.extend(game.render, function(context, camera){
         game._context.strokeStyle = "rgb(255,0,0)";
         game._context.beginPath();
@@ -194,8 +205,6 @@ function initialize(){
     
     game.update = jsGame.extend(game.update, function(){
         justClicked = false;
-
-        var cd = 50;
         for(var i in game._children)
         {
             var o1 = game._children[i];
@@ -205,7 +214,7 @@ function initialize(){
                 var o2 = game._children[j];
                 var dx = o1.x - o2.x;
                 var dy = o1.y - o2.y;
-                if(dx * dx + dy * dy <= cd*cd)
+                if(dx * dx + dy * dy <= (o1.collisionRadius + o2.collisionRadius)*(o1.collisionRadius + o2.collisionRadius))
                 {
                     var d = Math.sqrt(dx*dx+dy*dy);
                     dx /= d;
@@ -235,26 +244,22 @@ function initialize(){
     {
         var enemy = jsGame.Sprite(x, y);
         enemy.setImage('./assets/fluff.png', 80, 80);
-    	enemy.walkAnim = jsGame.Animation.Strip([0], 80, 80, 7.0);
+    	enemy.walkAnim = jsGame.Animation.Strip([1,2,3,4,5,6], 80, 80, 7.0);
     	enemy.idleAnim = jsGame.Animation.Strip([0], 80, 80, 1.0);
     	enemy.playAnimation(enemy.walkAnim);
     	enemy.wanderTimer = 0;
     	enemy.targetX = 0;
     	enemy.targetY = 0;
-    	enemy.speed = 100;
 
 	enemy.fuzzies = 100;
 	enemy.health = 100;
 	enemy.state = 'wandering';
 	enemy.attackTimer = 0;
 
+    	enemy.speed = 70;
+    	enemy.collisionRadius = 10;
         game.add(enemy);
         enemies.add(enemy);
-        
-        if(player.hugging)
-        {
-             
-        }
 
         enemy.update = jsGame.extend(enemy.update, function(elapsed){
 		enemy.fuzzies -= 1;
@@ -361,7 +366,85 @@ function initialize(){
 		}
 	    });
 	
+    		enemy.velocity.x = 0;
+    		enemy.velocity.y = 0;
+    
+    		// This math might be terrible, should also be moved to mouse listener.
+    		var vec = [];
+    		vec.x = enemy.x - enemy.targetX;
+    		vec.y = enemy.y - enemy.targetY
+    	    var dist = Math.sqrt(vec.x * vec.x + vec.y * vec.y);
+    
+            if(dist != 0)
+            {
+                vec.x /= dist;
+                vec.y /= dist;
+            }
+            else
+            {
+                vec.x = 0;
+                vec.y = -1;
+            }
+            
+            enemy.collisionRadius = Math.min(enemy.collisionRadius + elapsed * 20, 10);
+
+
+    		if(((Math.abs(enemy.x - enemy.targetX) > 20 ) || (Math.abs(enemy.y - enemy.targetY) > 20))){
+    		    enemy.angle = Math.atan2(vec.x, vec.y);
+
+    		    enemy.velocity.x = -vec.x * enemy.speed;
+    		    enemy.velocity.y = -vec.y * enemy.speed;
+    		    enemy.playAnimation(enemy.walkAnim);
+    		}
+    		else{
+    		    enemy.playAnimation(enemy.idleAnim);
+    		}
+    		
+            if(player.hugging)
+            {
+                project = function(ax,ay,bx,by)
+                {
+                    d = (bx*bx+by*by);
+                    dot = bx * ax + by * ay;
+                    temp = dot/d;
+                    return {x:bx*temp, y:by*temp};
+                };
+                testArm = function(arm)
+                {
+                  leftProj = project(enemy.x - arm[0].x - player.x, enemy.y - arm[0].y - player.y,
+                                      arm[1].x - arm[0].x,
+                                      arm[1].y - arm[0].y);
+                  if(leftProj.x * leftProj.x + leftProj.y * leftProj.y <= player.hugMagnitude * player.hugMagnitude)
+                  {
+                    ldx = leftProj.x - (enemy.x - arm[0].x - player.x); ldy = leftProj.y - (enemy.y - arm[0].y - player.y);
+                    if( ldx*ldx+ldy*ldy <= 50)
+                    {
+                        dx = enemy.x - (player.x + player.forward.x * -80);
+                        dy = enemy.y - (player.y + player.forward.y * -80);
+                        d = Math.sqrt(dx*dx+dy*dy);
+                        if(d > 0)
+                        {
+                          enemy.x += -dx / d * 2;
+                          enemy.y += -dy / d * 2;
+                        }
+                        enemy.targetX = player.x;
+                        enemy.targetY = player.y;
+                        enemy.collisionRadius = 3;
+                    }
+                  }
+                }
+                testArm(player.hugarms.left);
+                testArm(player.hugarms.right);
+            }
+        });
+
     	enemy.render = function(context, camera){
+            context.fillStyle = "rgba(0,0,0,0.2)";
+            context.beginPath();
+            context.arc(enemy.x + 5, enemy.y + 7, 20, 0, Math.PI*2, true);
+            context.closePath();
+            context.fill();
+
     		if(enemy.image !== null && enemy.visible){
     		    context.save();
     		    context.translate(enemy.x, enemy.y);
@@ -379,10 +462,12 @@ function initialize(){
     		}
     	};
     }
-    for(var i = 0; i < 20; i++)
+    for(var i = 0; i < 15; i++)
     {
         makeEnemy(Math.random()*700+50,Math.random()*500+50);
     }
+    
+    game.add(bg);
 
 	game.run();
 }
