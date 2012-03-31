@@ -1,11 +1,16 @@
 window.onload = function(){
-	initialize();
+    jsGame.Sound.load('./assets/cuddlehappy2.wav');
+    jsGame.Sound.load('./assets/cuddlesad.mp3');
+    initialize();
 }
 
 function initialize(){
-	var game = jsGame.Game(500, 300);
+	var game = jsGame.Game(800, 600);
 
-	// Dumb way to put a border around the game
+	var happySong2 = jsGame.Sound.play('./assets/cuddlehappy2.wav');
+	happySong2.loop = true;
+
+	// Dumb way to put a border around the game.
 	game._canvas.style.border="1px solid black";
 
 	game._canvas.onmousemove = function(e) {
@@ -24,9 +29,9 @@ function initialize(){
 	};
 
        	var player = jsGame.Sprite(300, 150);
-	//       	player.rectangleImage(20, 20, "rgb(0,0,0)");
-	player.setImage('./assets/sheet.png', 64, 64);
-	var walkAnim = jsGame.Animation.Strip([0, 1, 2, 3, 4, 5], 64, 64, 4.0, 0, 0);
+	player.setImage('./assets/sheet.png', 80, 80);
+	var walkAnim = jsGame.Animation.Strip([0, 1, 2, 3, 4, 5], 80, 80, 4.0);
+	var idleAnim = jsGame.Animation.Strip([0], 80, 80, 1.0);
 	player.playAnimation(walkAnim);
        	game.add(player);
 
@@ -35,31 +40,11 @@ function initialize(){
 	guide.y = 0;
 
 	player.angle = 0;
-	player.speed = 50;
+	player.speed = 120;
 
        	player.update = jsGame.extend(player.update, function(elapsed){
-		if (player.x === guide.x){
-		    player.velocity.x = 0;
-		}
-		else{
-		    if (player.x > guide.x){
-			player.velocity.x = -player.speed;
-		    }
-		    else{
-			player.velocity.x = player.speed;
-		    }
-		}
-		if (player.y === guide.y){
-		    player.velocity.y = 0;
-		}
-		else{
-		    if (player.y > guide.y){
-			player.velocity.y = -player.speed;
-		    }
-		    else{
-			player.velocity.y = player.speed;
-		    }
-		}
+		player.velocity.x = 0;
+		player.velocity.y = 0;
 
 		// This math might be terrible, should also be moved to mouse listener.
 		var vec = [];
@@ -67,24 +52,31 @@ function initialize(){
 		vec.y = player.y - guide.y;
 		if((Math.abs(player.x - guide.x) >= 1 ) && (Math.abs(player.y - guide.y) >= 5)){
 		    player.angle = Math.atan2(vec.x, vec.y);
+
+		    var dist = Math.sqrt(vec.x * vec.x + vec.y * vec.y);
+
+		    vec.x /= dist;
+		    vec.y /= dist;
+		    player.velocity.x = -vec.x * player.speed;
+		    player.velocity.y = -vec.y * player.speed;
+		    player.playAnimation(walkAnim);
+		}
+		else{
+		    player.playAnimation(idleAnim);
 		}
 		
 	    });
 
-	//	player.oldRender = player.render;
-	player.oldRender = function(context, camera){
+	player.render = function(context, camera){
 		if(player.image !== null && player.visible){
+		    console.log(player.x);
 		    context.save();
 		    context.translate(player.x, player.y);
-
 		    context.rotate(-(player.angle + 1.5));
-		    //		    context.setTransform(1,0,0,1,0,0);
-		    //		    context.setTransform(0.93,0.3,-0.3,0.93,0,0);
+       		    //context.setTransform(1,0,0,1,0,0);
 		    context.drawImage(player.image,
-					  //	player.x - camera.scroll.x * player.parallax.x,
-					  //player.y - camera.scroll.y * player.parallax.y,
-					  0,
-					  0,
+					  player.frame.x,
+					  player.frame.y,
 					  player.width,
 					  player.height,
 					  -player.width/2,
@@ -94,21 +86,6 @@ function initialize(){
 			context.restore();
 		}
 	};
-
-	player.render = function(context, camera){
-		// Add angle caclculations here. Happens every render,
-		// but should be fine on player sprite?
-
-		
-
-		player.oldRender(context, camera);
-
-
-	    };
-
-	var tail = jsGame.Sprite(300, 150);
-       	tail.rectangleImage(20, 20, "rgb(255,0,0)");
-       	game.add(tail);
 
 	game.run();
 }
