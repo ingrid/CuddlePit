@@ -39,14 +39,56 @@ function initialize(){
 	gonnagetcha4.volume = 0.7; gonnagetcha5.volume = 0.7; harpeffect.volume = 0.7;
 	sigh.volume = 0.7;
 
-	var heartPool = [];
+	game.heartPool = [];
 	
-	for(var h = 0; h < 10; h++){
+
+	game.makeHeart = function(){
 	    var heart = jsGame.Sprite(0,0);
 	    heart.setImage("./assets/heart.png");
 	    heart.visible = false;
+	    heart.lifeSpan = 5;
+	    heart.timer = 0;
+	    heart.inUse = false;
+	    heart.layer = 3;
+	    heart.drawHeart = function(x, y){
+		heart.x = x;
+		heart.y = y;
+		heart.ancor = x;
+		heart.visible = true;
+		heart.inUse = true;
+		heart.update = function(elapsed){
+		    if(heart.timer >= heart.lifeSpan){
+			heart.timer = 0;
+			heart.visible = false;
+			heart.velocity.y = 0;
+			heart.inUse = false;
+			heart.update = function(elapsed){
+			};
+		    }else{
+			heart.y -= 0.5;
+			// Sine wave stuff.
+			heart.x = x - Math.sin(heart.timer*3) * 20;
+			heart.timer += game.elapsed;
+		    }
+		    };
+	    };
 	    game.add(heart);
-	    heartPool[h] = heart;
+	    return heart;
+	};
+	for(var h = 0; h < 30; h++){
+	    game.heartPool[h] = game.makeHeart();
+	}
+	for(var h = 0; h < game.heartPool.length; h++){
+	    game.heartPool[h].visible = false;
+	}
+
+	game.getHeart = function(){
+	    for(var h = 0; h < game.heartPool.length; h++){
+		if(game.heartPool[h].inUse === false){
+		    return game.heartPool[h];
+		}
+	    }
+	    return undefined;
 	}
 
 	var butterPool = [];
@@ -430,14 +472,14 @@ function initialize(){
 	    if(game.timer >= game.levelTimeLimit){
 			if(game.avgFuzz >= game.goal){
 			    //Good Ending
-			    alert("You Win!  Fuzzzytime!");
+			    //alert("You Win!  Fuzzzytime!");
 			}else{
 				//Bad Ending (Time up)
-			    alert("You Lose!  Poor penguin!");
+			    //alert("You Lose!  Poor penguin!");
 			}
 	    }else if(game.numEnemiesAlive < game.minEnemiesToWin){
 			//Bad Ending, too many died
-			alert("You Lose!  Too many Fluff Demons died!");
+			//alert("You Lose!  Too many Fluff Demons died!");
 		}else{
 		game.timer += game.elapsed;
 	    }
@@ -684,6 +726,10 @@ function initialize(){
 						if(enemy.hugged === false){
 						    enemy.hugged = true;
 						    enemy.fuzzies = Math.min(enemy.fuzzies + 50, 100);
+						    var heartSpawn = game.getHeart();
+						    if(heartSpawn != undefined){
+							heartSpawn.drawHeart(enemy.x, enemy.y);
+						    }
 						}
 					    }
 				    }
