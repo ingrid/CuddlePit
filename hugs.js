@@ -122,7 +122,7 @@ function initialize(){
 
 	**/
 
-	for(var h = 0; h < 30; h++){
+	for(var h = 0; h < 80; h++){
 	    game.heartPool[h] = game.makeHeart();
 	    //	    game.powPool[h] = game.makePow();
 	    //	    game.heartPool[h] = game.makeHeart();
