@@ -1,7 +1,4 @@
 window.onload = function(){
-    jsGame.Sound.load('./assets/cuddlehappy2.wav');
-    jsGame.Sound.load('./assets/cuddlesad.mp3');
-    //initialize();
     var titleGame = jsGame.Game(800, 600);
     
     var titleImg = jsGame.Sprite(0, 0);
@@ -21,11 +18,28 @@ window.onload = function(){
 function initialize(){
 	var game = jsGame.Game(800, 600);
 
-	var happySong2 = jsGame.Sound.load('./assets/cuddlehappy2.wav');
+	// SFX
+	var deathcry = jsGame.Sound.load('./assets/deathcry.mp3');
+	var footstep2 = jsGame.Sound.load('./assets/footstep2.mp3');
+	footstep2.volume = 0.9;
+	var footstep1 = jsGame.Sound.load('./assets/footstep1.mp3');
+	footstep1.volume = 0.4;
+	var gonnagetcha1 = jsGame.Sound.load('./assets/gonnagetcha1.mp3');
+	var gonnagetcha2 = jsGame.Sound.load('./assets/gonnagetcha2.mp3');
+	var gonnagetcha3 = jsGame.Sound.load('./assets/gonnagetcha3.mp3');
+	var gonnagetcha4 = jsGame.Sound.load('./assets/gonnagetcha4.mp3');
+	var gonnagetcha5 = jsGame.Sound.load('./assets/gonnagetcha5.mp3');
+	var harpeffect = jsGame.Sound.load('./assets/harpeffect422.mp3');
+	var pop = jsGame.Sound.load('./assets/pop.mp3');
+	var punch1 = jsGame.Sound.load('./assets/punch1.mp3');
+	var punch2 = jsGame.Sound.load('./assets/punch2.mp3');
+	var sigh = jsGame.Sound.load('./assets/sigheffect2.mp3');
+
+	var happySong2 = jsGame.Sound.load('./assets/cuddlepitmusicbright.mp3');
 	happySong2.loop = true;
 	happySong2.play();
 
-	var cuddleSad = jsGame.Sound.load('./assets/cuddlesad.mp3');
+	var cuddleSad = jsGame.Sound.load('./assets/cuddlepitmusicdark.mp3');
 	cuddleSad.loop = true;
 	cuddleSad.volume = 0;
 	cuddleSad.play();
@@ -33,10 +47,12 @@ function initialize(){
 	var happyBG = jsGame.Sprite(0,0);
 	happyBG.setImage("./assets/happybg.png");
 	happyBG.fade = 1;
+	happyBG.layer=-2;
 
 	var sadBG = jsGame.Sprite(0,0);
 	sadBG.setImage("./assets/sadbg.png");
 	sadBG.fade = 0;
+	sadBG.layer=-2;
 
 	var oldHappyRender = happyBG.render;
 	var oldSadRender = sadBG.render;
@@ -126,6 +142,13 @@ function initialize(){
 	    for(var h = 0; h < enemies.getChildren().length; h++){
 		enemies.getChildren()[h].hugged = false;
 	    }
+	    player.hugSoundPlayed = false;
+
+	    var voiceChance = Math.random();
+	    console.log(voiceChance);
+	    if(voiceChance <= 0.2){
+		gonnagetcha1.play();
+	    }
 	}
 
     var player = jsGame.Sprite(300, 150);
@@ -137,8 +160,9 @@ function initialize(){
 	player.setImage('./assets/penguin.png', 80, 80);
 	var walkAnim = jsGame.Animation.Strip([1, 2, 3, 4, 5, 6], 80, 80, 7.0);
 	var idleAnim = jsGame.Animation.Strip([0], 80, 80, 1.0);
+	var hugAnim = jsGame.Animation.Strip([7], 80, 80, 1.0);
 	player.playAnimation(walkAnim);
-    game.add(player);
+	game.add(player);
     
 	player.hugarms = {left: [{x:0, y:0}, {x:-10, y:-20}], right: [{x:0, y:0}, {x:10, y:-20}] };
 	player.hugging = false;
@@ -149,12 +173,17 @@ function initialize(){
 	player.hugStartAngle = Math.PI / 4;
 	player.hugAngle = 0;
 	player.hugMinAngle = -0.2;
+	player.hugSoundPlayed = false;
+	player.hugSounds = [harpeffect, sigh];
     
 	player.angle = 0;
 	player.speed = 120;
 	player.collisionRadius = 25;
+	
+	player.currFrame = 1;
+	player.layer = 1;
 
-    player.update = jsGame.extend(player.update, function(elapsed){
+	player.update = jsGame.extend(player.update, function(elapsed){
 	    player.velocity.x = 0;
 	    player.velocity.y = 0;
 
@@ -184,7 +213,14 @@ function initialize(){
 		    player.playAnimation(walkAnim);
 		}
 		else{
-		    player.playAnimation(idleAnim);
+            if(player.hugging)
+            {
+                player.playAnimation(hugAnim);
+            }
+            else
+            {
+		      player.playAnimation(idleAnim);
+            }
 		}
 
         if(justClicked && !player.hugging)
@@ -215,14 +251,80 @@ function initialize(){
         rightArmEnd = {x: rightArmStart.x + Math.sin(-rightArmAngle) * player.hugMagnitude, y: rightArmStart.y + -Math.cos(-rightArmAngle) * player.hugMagnitude}
         player.hugarms.left = [leftArmStart, leftArmEnd];
         player.hugarms.right = [rightArmStart, rightArmEnd];
+
 	    });
 
 	player.render = function(context, camera){
+
+
+        context.lineCap = 'round';
+
+        context.beginPath();
+        context.strokeStyle = "#0f3591";
+        context.lineWidth = 6;
+        context.moveTo(player.hugarms.left[0].x + player.x,player.hugarms.left[0].y + player.y);
+        context.lineTo(player.hugarms.left[1].x + player.x,player.hugarms.left[1].y + player.y);
+        context.moveTo(player.hugarms.left[1].x + player.x,player.hugarms.left[1].y + player.y);
+        context.lineTo(player.hugarms.left[0].x*0.8 + player.x,player.hugarms.left[0].y*0.8 + player.y);
+        context.stroke();
+        context.closePath();
+
+        context.beginPath();
+        context.strokeStyle = "#1e62ba";
+        context.lineWidth = 6;
+        context.moveTo(player.hugarms.left[1].x + player.x - 1,player.hugarms.left[1].y + player.y - 3);
+        context.lineTo(player.hugarms.left[0].x*0.7 + player.x - 1,player.hugarms.left[0].y*0.7 + player.y - 3);
+        context.stroke();
+        context.closePath();
+
+
+        context.beginPath();
+        context.strokeStyle = "#0f3591";
+        context.lineWidth = 6;
+        context.moveTo(player.hugarms.right[0].x + player.x,player.hugarms.right[0].y + player.y);
+        context.lineTo(player.hugarms.right[1].x + player.x,player.hugarms.right[1].y + player.y);
+        context.moveTo(player.hugarms.right[1].x + player.x,player.hugarms.right[1].y + player.y);
+        context.lineTo(player.hugarms.right[0].x*0.8 + player.x,player.hugarms.right[0].y*0.8 + player.y);
+        context.stroke();
+        context.closePath();
+
+        context.beginPath();
+        context.strokeStyle = "#1e62ba";
+        context.lineWidth = 6;
+        context.moveTo(player.hugarms.right[1].x + player.x - 1,player.hugarms.right[1].y + player.y - 3);
+        context.lineTo(player.hugarms.right[0].x*0.7 + player.x - 1,player.hugarms.right[0].y*0.7 + player.y - 3);
+        context.stroke();
+        context.closePath();
+
         context.fillStyle = "rgba(0,0,0,0.2)";
         context.beginPath();
         context.arc(player.x + 5, player.y + 7, 25, 0, Math.PI*2, true);
         context.closePath();
         context.fill();
+
+	    var newFrame = player.frame.x / player.width;
+	    if((player.currFrame != newFrame) && ((newFrame === 2) || (newFrame === 5))){
+		if(Math.random() >= 0.5){
+		    footstep1.play();
+		    if(footstep1.currentTime > 0)
+		    {
+                footstep2.play();
+            }
+		}else{
+		    footstep2.play();
+		    if(footstep2.currentTime > 0)
+		    {
+                footstep1.play();
+            }
+		}
+	    }
+	    player.currFrame = newFrame;
+	    context.fillStyle = "rgba(0,0,0,0.2)";
+	    context.beginPath();
+	    context.arc(player.x + 5, player.y + 7, 25, 0, Math.PI*2, true);
+	    context.closePath();
+	    context.fill();
+
 		if(player.image !== null && player.visible){
 		    context.save();
 		    context.translate(player.x, player.y);
@@ -238,21 +340,12 @@ function initialize(){
 				      player.height);
 			context.restore();
 		}
+		
+
 	};
     proj = {x:0, y:0};
 	game.render = jsGame.extend(game.render, function(context, camera){
-        game._context.strokeStyle = "#1e62ba";
-        game._context.lineWidth = 9;
-        game._context.beginPath();
-        game._context.moveTo(player.hugarms.left[0].x + player.x,player.hugarms.left[0].y + player.y);
-        game._context.lineTo(player.hugarms.left[1].x + player.x,player.hugarms.left[1].y + player.y);
-        game._context.closePath();
-        game._context.stroke();
-        game._context.beginPath();
-        game._context.moveTo(player.hugarms.right[0].x + player.x,player.hugarms.right[0].y + player.y);
-        game._context.lineTo(player.hugarms.right[1].x + player.x,player.hugarms.right[1].y + player.y);
-        game._context.closePath();
-        game._context.stroke();
+
     });
     
     game.update = jsGame.extend(game.update, function(){
@@ -342,17 +435,20 @@ function initialize(){
         enemy.setImage('./assets/fluff.png', 80, 80);
     	enemy.walkAnim = jsGame.Animation.Strip([1,2,3,4,5,6], 80, 80, 7.0);
     	enemy.idleAnim = jsGame.Animation.Strip([0], 80, 80, 1.0);
+    	enemy.dieAnim = jsGame.Animation.Strip([7,8,9,10,11,12,13,14], 80, 80, 16.0);
+    	enemy.dieAnim.looping = false;
     	enemy.playAnimation(enemy.walkAnim);
     	enemy.wanderTimer = 0;
     	enemy.targetX = 0;
     	enemy.targetY = 0;
-	
+
 	//Default Enemy starting state
 	enemy.fuzzies = 60 + Math.random() * 20;
 	enemy.health = 100;
 	enemy.state = 'wandering';
-	enemy.aggroRadius = 50;
+	enemy.aggroRadius = 20;
 	enemy.attackTimer = 0;
+	enemy.layer = Math.random();
 	enemy.hugged = false;
 	enemy.fuzzyTimer = 1;
 
@@ -362,13 +458,14 @@ function initialize(){
         enemies.add(enemy);
 
         enemy.update = jsGame.extend(enemy.update, function(elapsed){
+        if(enemy.health < 0) { return; }
 		if(enemy.fuzzyTimer <= 0){
 		    enemy.fuzzies = Math.max(enemy.fuzzies - 3, 0);
 		    enemy.fuzzyTimer = 1
 		}else{
 		    enemy.fuzzyTimer -= game.elapsed;
 		}
-		
+
 		//Enemy Irritated state
 		if(enemy.fuzzies <= 70 && enemy.fuzzies > 25)
 		{
@@ -386,7 +483,7 @@ function initialize(){
         {
             enemy.setImage('./assets/fluff3.png', 80, 80);
         }
-		
+
 		//When an enemy fights
 		if(enemy.fuzzies <= 70){
 		    enemy.state = 'fighting';
@@ -395,18 +492,23 @@ function initialize(){
 		    enemy.state = 'wandering';
 		}
 
+        enemy.aggroRadius = Math.max(0,(70 - enemy.fuzzies)*2);
+
 		if(enemy.health <= 0){
 		    // Play death animation.
-		    enemy.update = function(elapsed){
-		    };
 		    enemy.state = 'dead';
 		    enemy.collisionRadius = 0;
-		    enemy.visible = false;
+		    //enemy.visible = false;
+		    enemy.playAnimation(enemy.dieAnim);
+		    enemy.velocity.x = 0;
+		    enemy.velocity.y = 0;
+		    enemy.layer = -1;
+		    return;
 		}
 
 		else{
 		    if(enemy.state === 'fighting'){
-			if(enemy.fightTarget === undefined){
+		if(enemy.fightTarget === undefined){
 			    // Try to find a target.
 			    for(var e = 0; e < enemies.getChildren().length; e++){
 				var candidate = enemies.getChildren()[e];
@@ -453,7 +555,7 @@ function initialize(){
 			    var vec = [];
 			    vec.x = enemy.x - enemy.fightTarget.x;
 			    vec.y = enemy.y - enemy.fightTarget.y;
-			    
+
 			    var dist = Math.sqrt(vec.x * vec.x + vec.y * vec.y);
 			    
 			    if(dist != 0){
@@ -476,6 +578,7 @@ function initialize(){
 		    }
 		}
 		if(enemy.state === 'wandering'){
+            enemy.fightTarget = undefined;
 		    if(enemy.wanderTimer <= 0){
 			enemy.wanderTimer = Math.random() * 5 + 1;
 			enemy.targetX = Math.random() * 700 + 50;
@@ -533,9 +636,17 @@ function initialize(){
 						   arm[1].y - arm[0].y);
 				if(leftProj.x * leftProj.x + leftProj.y * leftProj.y <= player.hugMagnitude * player.hugMagnitude)
 				    {
+                    if(leftProj.x * player.forward.x + leftProj.y * player.forward.y > 0) { return; }
 					ldx = leftProj.x - (enemy.x - arm[0].x - player.x); ldy = leftProj.y - (enemy.y - arm[0].y - player.y);
-					if( ldx*ldx+ldy*ldy <= 50)
+					if( ldx*ldx+ldy*ldy <= 100)
 					    {
+
+						if(player.hugSoundPlayed === false){
+						    player.hugSoundPlayed = true;
+						    var snd = Math.floor(Math.random() * player.hugSounds.length);
+						    var hugSound = player.hugSounds[snd];
+						    hugSound.play();
+						}
 						dx = enemy.x - (player.x + player.forward.x * -80);
 						dy = enemy.y - (player.y + player.forward.y * -80);
 						d = Math.sqrt(dx*dx+dy*dy);
@@ -557,15 +668,33 @@ function initialize(){
 			    testArm(player.hugarms.left);
 			    testArm(player.hugarms.right);
 			}
-	    });
+
+		// Fence logic.
+		if(enemy.x <= 40){
+		    enemy.velocity.x = 20;
+		}
+		if(enemy.x >= 760){
+		    enemy.velocity.x = -20;
+		}
+		if(enemy.y <= 40){
+		    enemy.velocity.y = 20;
+		}
+		if(enemy.y >= 560){
+		    enemy.velocity.y = -20;
+		}
+
+			});
 
 
 	    enemy.render = function(context, camera){
-    		context.fillStyle = "rgba(0,0,0,0.2)";
-    		context.beginPath();
-    		context.arc(enemy.x + 5, enemy.y + 7, 20, 0, Math.PI*2, true);
-    		context.closePath();
-    		context.fill();
+            if(enemy.health > 0)
+            {
+        		context.fillStyle = "rgba(0,0,0,0.2)";
+        		context.beginPath();
+        		context.arc(enemy.x + 5, enemy.y + 7, 20, 0, Math.PI*2, true);
+        		context.closePath();
+        		context.fill();
+            }
 
     		if(enemy.image !== null && enemy.visible){
     		    context.save();
@@ -582,22 +711,6 @@ function initialize(){
     				      enemy.height);
     			context.restore();
     		}
-
-            if(enemy.state == "wandering") { context.fillStyle="rgb(0,255,0)"; }
-            if(enemy.state == "fighting") { context.fillStyle="rgb(255,0,0)"; }
-            if(enemy.state == "dead") { context.fillStyle="rgb(0,0,0)"; }
-            context.fillRect(enemy.x, enemy.y, 5,5);
-
-            if(enemy.fightTarget && enemy.state == "fighting")
-            {
-              context.lineWidth = 1;
-              context.strokeStyle = "rgb(255,0,0)";
-              context.beginPath();
-              context.moveTo(enemy.x, enemy.y);
-              context.lineTo(enemy.fightTarget.x, enemy.fightTarget.y);
-              context.closePath();
-              context.stroke();
-            }
     	};
     }
 
