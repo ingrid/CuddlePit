@@ -16,48 +16,74 @@ function initialize(){
 	cuddleSad.volume = 0;
 	cuddleSad.play();
 
-	var bg = jsGame.Sprite(0,0);
-	bg.setImage("./assets/bg.png");
+	var happyBG = jsGame.Sprite(0,0);
+	happyBG.setImage("./assets/happybg.png");
+	happyBG.fade = 1;
 
+	var sadBG = jsGame.Sprite(0,0);
+	sadBG.setImage("./assets/sadbg.png");
+	sadBG.fade = 0;
+
+	var oldHappyRender = happyBG.render;
+	var oldSadRender = sadBG.render;
+
+	happyBG.render = function(context, camera){
+	    context.save()
+	    context.globalAlpha = happyBG.fade;
+	    oldHappyRender(context, camera);
+	    context.restore();
+	}
+
+	sadBG.render = function(context, camera){
+	    context.save()
+   	    context.globalAlpha = sadBG.fade;
+	    oldSadRender(context, camera);
+	    context.restore();
+	}
 
 	var fading = false;
 	var fadeTime = 0;
-	var volOld = 1;
-	var volNew = 0;
-	var fadeInterval = 15;
+	var valOld = 1;
+	var valNew = 0;
+	var fadeInterval = 0.5;
 	var fadeFlag = false;
 	context = game._canvas.getContext('2d');
-	game.music = function(elapsed){
+	game.crossfade = function(elapsed){
 	    if((fading === false) && (fadeFlag === true)){
 		fading = true
 	    }
 	    if(fading === true){
 		if(fadeTime >= fadeInterval){
 		    fading = false;
+		    fadeFlag = false;
 		    fadeTime = 0;
 		}else{
-		    var volOld = Math.cos(fadeTime/fadeInterval * Math.PI) * 0.5 + 0.5;
-		    var volNew = 1 - volOld;
-		    if(game.mood = 'happy'){
-			happySong2.volume = volNew;
-			cuddleSad.volume = volOld;
+		    var valOld = Math.cos(fadeTime/fadeInterval * Math.PI) * 0.5 + 0.5;
+		    var valNew = 1 - valOld;
+		    if(game.mood === 'happy'){
+			happySong2.volume = valNew;
+			cuddleSad.volume = valOld;
+			happyBG.fade = valNew;
+			sadBG.fade = valOld;
 		    }else{
-			happySong2.volume = volOld;
-			cuddleSad.volume = volNew;
+			happySong2.volume = valOld;
+			cuddleSad.volume = valNew;
+			happyBG.fade = valOld;
+			sadBG.fade = valNew;
 		    }
 		    fadeTime += elapsed;	
 		}	
 	    }
 	};
 
-	game.highMoodMark = 85;
-	game.goal = 75;
-	game.lowMoodMark = 75;
+	game.highMoodMark = 70;
+	game.goal = 60;
+	game.lowMoodMark = 60;
 
 	game.mood = 'happy'; // On of happy or sad.
 	
 	game.update = jsGame.extend(game.update, function(){
-		game.music(game.elapsed);
+		game.crossfade(game.elapsed);
 	    });
 
 	var justClicked = false;
@@ -243,21 +269,38 @@ function initialize(){
 
     enemies = jsGame.CollisionGroup();
 
+    game.avgFuzz = undefined;
+
     // Average fuzzy level.
     game.update = jsGame.extend(game.update, function(){
 	    var totalFuzz = 0;
 	    for(var i = 0; i < enemies.getChildren().length; i++){
 		totalFuzz += enemies.getChildren()[i].fuzzies;
 	    }
-	    var avgFuzz = totalFuzz/enemies.children.length;
+	    game.avgFuzz = totalFuzz/enemies.children.length;
 	    
-	    if((game.mood === 'sad') && (avgFuzz >= game.highMoodMark) && (fadeFlag === false)){
+	    if((game.mood === 'sad') && (game.avgFuzz >= game.highMoodMark) && (fadeFlag === false)){
 		game.mood = 'happy';
 		fadeFlag = true;
 	    }
-	    if((game.mood === 'happy') && (avgFuzz <= game.lowMoodMark) && (fadeFlag === false)){
+	    if((game.mood === 'happy') && (game.avgFuzz <= game.lowMoodMark) && (fadeFlag === false)){
 		game.mood = 'sad';
 		fadeFlag = true;
+	    }
+	});
+
+    // Level timer.
+    game.timer = 0;
+    game.levelTimeLimit = 40;
+    game.update = jsGame.extend(game.update, function(){
+	    if(game.timer >= game.levelTimeLimit){
+		if(game.avgFuzz >= game.goal){
+		    // Win!
+		}else{
+		    // Loss!
+		}
+	    }else{
+		game.timer += game.elapsed;
 	    }
 	});
 
@@ -523,8 +566,10 @@ function initialize(){
 	{
 	    makeEnemy(Math.random()*700+50,Math.random()*500+50);
 	}
+
+    game.add(sadBG);
     
-    game.add(bg);
+    game.add(happyBG);
     
     game.run();
 }
