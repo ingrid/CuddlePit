@@ -15,44 +15,78 @@ function initialize(){
 	cuddleSad.loop = true;
 	cuddleSad.volume = 0;
 	cuddleSad.play();
-	
-	var bg = jsGame.Sprite(0,0);
-	bg.setImage("./assets/bg.png");
 
+	var happyBG = jsGame.Sprite(0,0);
+	happyBG.setImage("./assets/happybg.png");
+	happyBG.fade = 1;
+
+	var sadBG = jsGame.Sprite(0,0);
+	sadBG.setImage("./assets/sadbg.png");
+	sadBG.fade = 0;
+
+	var oldHappyRender = happyBG.render;
+	var oldSadRender = sadBG.render;
+
+	happyBG.render = function(context, camera){
+	    context.save()
+	    context.globalAlpha = happyBG.fade;
+	    oldHappyRender(context, camera);
+	    context.restore();
+	}
+
+	sadBG.render = function(context, camera){
+	    context.save()
+   	    context.globalAlpha = sadBG.fade;
+	    oldSadRender(context, camera);
+	    context.restore();
+	}
 
 	var fading = false;
 	var fadeTime = 0;
-	var volOld = 1;
-	var volNew = 0;
+	var valOld = 1;
+	var valNew = 0;
 	var fadeInterval = 15;
 	var fadeFlag = false;
 	context = game._canvas.getContext('2d');
-	game.music = function(elapsed){
+	game.crossfade = function(elapsed){
 	    if((fading === false) && (fadeFlag === true)){
 		fading = true
 	    }
 	    if(fading === true){
 		if(fadeTime >= fadeInterval){
 		    fading = false;
+		    fadeFlag = false;
 		    fadeTime = 0;
-		}
-		else{
-		    var volOld = Math.cos(fadeTime/fadeInterval * Math.PI) * 0.5 + 0.5;
-		    var volNew = 1 - volOld;
-		    happySong2.volume = volOld;
-		    cuddleSad.volume = volNew;
+		}else{
+		    var valOld = Math.cos(fadeTime/fadeInterval * Math.PI) * 0.5 + 0.5;
+		    var valNew = 1 - valOld;
+		    if(game.mood === 'happy'){
+			happySong2.volume = valNew;
+			cuddleSad.volume = valOld;
+			happyBG.fade = valNew;
+			sadBG.fade = valOld;
+		    }else{
+			happySong2.volume = valOld;
+			cuddleSad.volume = valNew;
+			happyBG.fade = valOld;
+			sadBG.fade = valNew;
+		    }
 		    fadeTime += elapsed;	
 		}	
 	    }
 	};
+
+	game.highMoodMark = 85;
+	game.goal = 75;
+	game.lowMoodMark = 75;
+
+	game.mood = 'happy'; // On of happy or sad.
 	
 	game.update = jsGame.extend(game.update, function(){
-		game.music(game.elapsed);
+		game.crossfade(game.elapsed);
 	    });
 
-	var overload = jsGame.Sound.play('./assets/overload.wav');
 	var justClicked = false;
-	overload.loop = true;
 
 	// Dumb way to put a border around the game.
 	game._canvas.style.border="1px solid black";
@@ -74,8 +108,11 @@ function initialize(){
 
 	game._canvas.onmousedown = function(e)
 	{
-        justClicked = true;
-    }
+	    justClicked = true;
+	    for(var h = 0; h < enemies.getChildren().length; h++){
+		enemies.getChildren()[h].hugged = false;
+	    }
+	}
 
     var player = jsGame.Sprite(300, 150);
 
@@ -91,26 +128,26 @@ function initialize(){
     
 	player.hugarms = {left: [{x:0, y:0}, {x:-10, y:-20}], right: [{x:0, y:0}, {x:10, y:-20}] };
 	player.hugging = false;
-    player.hugMagnitude = 0;
-    player.hugMagSpeed = 360;
-    player.hugAngleSpeed = 3.0;
-    player.hugMaxMagnitude = 100;
-    player.hugStartAngle = Math.PI / 4;
-    player.hugAngle = 0;
-    player.hugMinAngle = -0.2
+	player.hugMagnitude = 0;
+	player.hugMagSpeed = 360;
+	player.hugAngleSpeed = 3.0;
+	player.hugMaxMagnitude = 100;
+	player.hugStartAngle = Math.PI / 4;
+	player.hugAngle = 0;
+	player.hugMinAngle = -0.2;
     
 	player.angle = 0;
 	player.speed = 120;
 	player.collisionRadius = 25;
 
     player.update = jsGame.extend(player.update, function(elapsed){
-		player.velocity.x = 0;
-		player.velocity.y = 0;
+	    player.velocity.x = 0;
+	    player.velocity.y = 0;
 
-		// This math might be terrible, should also be moved to mouse listener.
-		var vec = [];
-		vec.x = player.x - guide.x;
-		vec.y = player.y - guide.y;
+	    // This math might be terrible, should also be moved to mouse listener.
+	    var vec = [];
+	    vec.x = player.x - guide.x;
+	    vec.y = player.y - guide.y;
 	    var dist = Math.sqrt(vec.x * vec.x + vec.y * vec.y);
 
         if(dist != 0)
@@ -239,6 +276,15 @@ function initialize(){
 		totalFuzz += enemies.getChildren()[i].fuzzies;
 	    }
 	    var avgFuzz = totalFuzz/enemies.children.length;
+	    
+	    if((game.mood === 'sad') && (avgFuzz >= game.highMoodMark) && (fadeFlag === false)){
+		game.mood = 'happy';
+		fadeFlag = true;
+	    }
+	    if((game.mood === 'happy') && (avgFuzz <= game.lowMoodMark) && (fadeFlag === false)){
+		game.mood = 'sad';
+		fadeFlag = true;
+	    }
 	});
 
     makeEnemy = function(x,y){
@@ -251,26 +297,49 @@ function initialize(){
     	enemy.targetX = 0;
     	enemy.targetY = 0;
 	
-	enemy.fuzzies = 100;
+	enemy.fuzzies = 40 + Math.random() * 20;
 	enemy.health = 100;
 	enemy.state = 'wandering';
 	enemy.aggroRadius = 50;
 	enemy.attackTimer = 0;
+	enemy.hugged = false;
+	enemy.fuzzyTimer = 1;
 
     	enemy.speed = 70;
     	enemy.collisionRadius = 10;
         game.add(enemy);
         enemies.add(enemy);
-	
+
         enemy.update = jsGame.extend(enemy.update, function(elapsed){
-		enemy.fuzzies = Math.max(enemy.fuzzies - 1, 0);
+		if(enemy.fuzzyTimer <= 0){
+		    enemy.fuzzies = Math.max(enemy.fuzzies - 4, 0);
+		    enemy.fuzzyTimer = 1
+		}else{
+		    enemy.fuzzyTimer -= game.elapsed;
+		}
+		
+		if(enemy.fuzzies <= 50 && enemy.fuzzies > 15)
+		{
+            enemy.setImage('./assets/fluff2.png', 80, 80);
+        }
+
+        if(enemy.fuzzies > 50)
+        {
+            enemy.setImage('./assets/fluff.png', 80, 80);
+        }
+        
+        if(enemy.fuzzies < 15)
+        {
+            enemy.setImage('./assets/fluff3.png', 80, 80);
+        }
+
 		if(enemy.fuzzies <= 15){
 		    enemy.state = 'fighting';
 		}
 		else{
 		    enemy.state = 'wandering';
 		}
-		
+
 		if(enemy.health <= 0){
 		    // Play death animation.
 		    enemy.update = function(elapsed){
@@ -422,6 +491,10 @@ function initialize(){
 						enemy.targetX = player.x;
 						enemy.targetY = player.y;
 						enemy.collisionRadius = 3;
+						if(enemy.hugged === false){
+						    enemy.hugged = true;
+						    enemy.fuzzies = Math.min(enemy.fuzzies + 50, 100);
+						}
 					    }
 				    }
 			    }
@@ -461,6 +534,7 @@ function initialize(){
 
             if(enemy.fightTarget && enemy.state == "fighting")
             {
+              context.lineWidth = 1;
               context.strokeStyle = "rgb(255,0,0)";
               context.beginPath();
               context.moveTo(enemy.x, enemy.y);
@@ -474,8 +548,12 @@ function initialize(){
 	{
 	    makeEnemy(Math.random()*700+50,Math.random()*500+50);
 	}
+
+    game.add(sadBG);
     
-    game.add(bg);
+    game.add(happyBG);
+
+
     
     game.run();
 }
