@@ -45,7 +45,7 @@ function initialize(){
 	var fadeTime = 0;
 	var valOld = 1;
 	var valNew = 0;
-	var fadeInterval = 15;
+	var fadeInterval = 0.5;
 	var fadeFlag = false;
 	context = game._canvas.getContext('2d');
 	game.crossfade = function(elapsed){
@@ -76,9 +76,9 @@ function initialize(){
 	    }
 	};
 
-	game.highMoodMark = 85;
-	game.goal = 75;
-	game.lowMoodMark = 75;
+	game.highMoodMark = 70;
+	game.goal = 60;
+	game.lowMoodMark = 60;
 
 	game.mood = 'happy'; // On of happy or sad.
 	
@@ -269,21 +269,38 @@ function initialize(){
 
     enemies = jsGame.CollisionGroup();
 
+    game.avgFuzz = undefined;
+
     // Average fuzzy level.
     game.update = jsGame.extend(game.update, function(){
 	    var totalFuzz = 0;
 	    for(var i = 0; i < enemies.getChildren().length; i++){
 		totalFuzz += enemies.getChildren()[i].fuzzies;
 	    }
-	    var avgFuzz = totalFuzz/enemies.children.length;
+	    game.avgFuzz = totalFuzz/enemies.children.length;
 	    
-	    if((game.mood === 'sad') && (avgFuzz >= game.highMoodMark) && (fadeFlag === false)){
+	    if((game.mood === 'sad') && (game.avgFuzz >= game.highMoodMark) && (fadeFlag === false)){
 		game.mood = 'happy';
 		fadeFlag = true;
 	    }
-	    if((game.mood === 'happy') && (avgFuzz <= game.lowMoodMark) && (fadeFlag === false)){
+	    if((game.mood === 'happy') && (game.avgFuzz <= game.lowMoodMark) && (fadeFlag === false)){
 		game.mood = 'sad';
 		fadeFlag = true;
+	    }
+	});
+
+    // Level timer.
+    game.timer = 0;
+    game.levelTimeLimit = 40;
+    game.update = jsGame.extend(game.update, function(){
+	    if(game.timer >= game.levelTimeLimit){
+		if(game.avgFuzz >= game.goal){
+		    // Win!
+		}else{
+		    // Loss!
+		}
+	    }else{
+		game.timer += game.elapsed;
 	    }
 	});
 
@@ -552,8 +569,6 @@ function initialize(){
     game.add(sadBG);
     
     game.add(happyBG);
-
-
     
     game.run();
 }
