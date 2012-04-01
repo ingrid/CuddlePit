@@ -35,8 +35,7 @@ function initialize(){
 		if(fadeTime >= fadeInterval){
 		    fading = false;
 		    fadeTime = 0;
-		}
-		else{
+		}else{
 		    var volOld = Math.cos(fadeTime/fadeInterval * Math.PI) * 0.5 + 0.5;
 		    var volNew = 1 - volOld;
 		    if(game.mood = 'happy'){
@@ -61,9 +60,7 @@ function initialize(){
 		game.music(game.elapsed);
 	    });
 
-	var overload = jsGame.Sound.play('./assets/overload.wav');
 	var justClicked = false;
-	overload.loop = true;
 
 	// Dumb way to put a border around the game.
 	game._canvas.style.border="1px solid black";
@@ -254,15 +251,13 @@ function initialize(){
 	    }
 	    var avgFuzz = totalFuzz/enemies.children.length;
 	    
-	    if((game.mood === 'sad') && (avgFuzz >= game.highMoodMark) && (game.fadeFlag === false)){
+	    if((game.mood === 'sad') && (avgFuzz >= game.highMoodMark) && (fadeFlag === false)){
 		game.mood = 'happy';
-		game.crossfade();
-		game.fadeFlag = true;
+		fadeFlag = true;
 	    }
-	    if((game.mood === 'happy') && (avgFuzz <= game.lowMoodMark) && (game.fadeFlag === false)){
+	    if((game.mood === 'happy') && (avgFuzz <= game.lowMoodMark) && (fadeFlag === false)){
 		game.mood = 'sad';
-		game.crossfade();
-		game.fadeFlag = true;
+		fadeFlag = true;
 	    }
 	});
 
