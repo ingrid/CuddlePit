@@ -35,6 +35,18 @@ function initialize(){
 	var punch2 = jsGame.Sound.load('./assets/punch2.mp3');
 	var sigh = jsGame.Sound.load('./assets/sigheffect2.mp3');
 
+	var heartPool = [];
+	
+	for(var h = 0; h < 10; h++){
+	    var heart = jsGame.Sprite(0,0);
+	    heart.setImage("./assets/heart.png");
+	    heart.visible = false;
+	    game.add(heart);
+	    heartPool[h] = heart;
+	}
+
+	var butterPool = [];
+
 	var happySong2 = jsGame.Sound.load('./assets/cuddlepitmusicbright.mp3');
 	happySong2.loop = true;
 	happySong2.play();
@@ -143,7 +155,6 @@ function initialize(){
 	    player.hugSoundPlayed = false;
 
 	    var voiceChance = Math.random();
-	    console.log(voiceChance);
 	    if(voiceChance <= 0.2){
 		gonnagetcha1.play();
 	    }
