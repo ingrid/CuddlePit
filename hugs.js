@@ -328,7 +328,8 @@ function initialize(){
     	enemy.targetX = 0;
     	enemy.targetY = 0;
 	
-	enemy.fuzzies = 40 + Math.random() * 20;
+	//Default Enemy starting state
+	enemy.fuzzies = 60 + Math.random() * 20;
 	enemy.health = 100;
 	enemy.state = 'wandering';
 	enemy.aggroRadius = 50;
@@ -349,22 +350,26 @@ function initialize(){
 		    enemy.fuzzyTimer -= game.elapsed;
 		}
 		
-		if(enemy.fuzzies <= 50 && enemy.fuzzies > 15)
+		//Enemy Irritated state
+		if(enemy.fuzzies <= 70 && enemy.fuzzies > 25)
 		{
             enemy.setImage('./assets/fluff2.png', 80, 80);
         }
-
-        if(enemy.fuzzies > 50)
+		
+		//Enemy Happy state
+        if(enemy.fuzzies > 70)
         {
             enemy.setImage('./assets/fluff.png', 80, 80);
         }
         
-        if(enemy.fuzzies < 15)
+        //Enemy Angry State
+        if(enemy.fuzzies < 25)
         {
             enemy.setImage('./assets/fluff3.png', 80, 80);
         }
-
-		if(enemy.fuzzies <= 50){
+		
+		//When an enemy fights
+		if(enemy.fuzzies <= 70){
 		    enemy.state = 'fighting';
 		}
 		else{
