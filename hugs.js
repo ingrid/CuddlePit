@@ -21,6 +21,13 @@ function initialize(){
 	var won = false;
 	var lost = false;
 	var gameOverBg;
+	var timerText = jsGame.Text(360,595);
+	timerText.layer = 6;
+	timerText.color = "rgb(255,255,255)";
+	timerText.text = "";
+	timerText.shadow = true;
+	timerText.font = "30pt arial bold";
+    game.add(timerText);
 
 	// SFX
 	var deathcry = jsGame.Sound.load('./assets/deathcry.mp3');
@@ -473,6 +480,8 @@ function initialize(){
 			if (candidate.state === 'dead')
 				game.numEnemiesAlive--;
 		}
+		
+    	timerText.text = Math.max(0,Math.floor(game.levelTimeLimit - game.timer));
         if(gameOverBg)
         {
             gameOverBg.fade += game.elapsed * 0.25;
@@ -570,6 +579,8 @@ function initialize(){
             if(won)
             {
               enemy.fuzzies = Math.min(enemy.fuzzies + 5, 100);
+              enemy.targetX = player.x;
+              enemy.targetY = player.y;
             }
             else
             {
@@ -654,6 +665,9 @@ function initialize(){
   				if(dx*dx+dy*dy <= 35*35 && enemy.attackTimer <= 0){
   				    enemy.fightTarget.health -= 10;
   				    enemy.fuzzies -= 5;
+  				    
+
+
   				    //alert(enemy.fightTarget.health);
   				    enemy.attackTimer = 1.5;
   				    if(Math.random() > 0.5)
