@@ -142,6 +142,13 @@ function initialize(){
 	    for(var h = 0; h < enemies.getChildren().length; h++){
 		enemies.getChildren()[h].hugged = false;
 	    }
+	    player.hugSoundPlayed = false;
+
+	    var voiceChance = Math.random();
+	    console.log(voiceChance);
+	    if(voiceChance <= 0.2){
+		gonnagetcha1.play();
+	    }
 	}
 
     var player = jsGame.Sprite(300, 150);
@@ -166,6 +173,8 @@ function initialize(){
 	player.hugStartAngle = Math.PI / 4;
 	player.hugAngle = 0;
 	player.hugMinAngle = -0.2;
+	player.hugSoundPlayed = false;
+	player.hugSounds = [harpeffect, sigh];
     
 	player.angle = 0;
 	player.speed = 120;
@@ -481,7 +490,7 @@ function initialize(){
 
 		else{
 		    if(enemy.state === 'fighting'){
-			if(enemy.fightTarget === undefined){
+		if(enemy.fightTarget === undefined){
 			    // Try to find a target.
 			    for(var e = 0; e < enemies.getChildren().length; e++){
 				var candidate = enemies.getChildren()[e];
@@ -613,6 +622,13 @@ function initialize(){
 					ldx = leftProj.x - (enemy.x - arm[0].x - player.x); ldy = leftProj.y - (enemy.y - arm[0].y - player.y);
 					if( ldx*ldx+ldy*ldy <= 100)
 					    {
+
+						if(player.hugSoundPlayed === false){
+						    player.hugSoundPlayed = true;
+						    var snd = Math.floor(Math.random() * player.hugSounds.length);
+						    var hugSound = player.hugSounds[snd];
+						    hugSound.play();
+						}
 						dx = enemy.x - (player.x + player.forward.x * -80);
 						dy = enemy.y - (player.y + player.forward.y * -80);
 						d = Math.sqrt(dx*dx+dy*dy);
@@ -634,7 +650,22 @@ function initialize(){
 			    testArm(player.hugarms.left);
 			    testArm(player.hugarms.right);
 			}
-	    });
+
+		// Fence logic.
+		if(enemy.x <= 40){
+		    enemy.velocity.x = 20;
+		}
+		if(enemy.x >= 760){
+		    enemy.velocity.x = -20;
+		}
+		if(enemy.y <= 40){
+		    enemy.velocity.y = 20;
+		}
+		if(enemy.y >= 560){
+		    enemy.velocity.y = -20;
+		}
+
+			});
 
 
 	    enemy.render = function(context, camera){
