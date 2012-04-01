@@ -15,7 +15,7 @@ function initialize(){
 	cuddleSad.loop = true;
 	cuddleSad.volume = 0;
 	cuddleSad.play();
-	
+
 	var bg = jsGame.Sprite(0,0);
 	bg.setImage("./assets/bg.png");
 
@@ -271,7 +271,7 @@ function initialize(){
     	enemy.targetX = 0;
     	enemy.targetY = 0;
 	
-	enemy.fuzzies = 100;
+	enemy.fuzzies = 40 + Math.random() * 20;
 	enemy.health = 100;
 	enemy.state = 'wandering';
 	enemy.aggroRadius = 50;
@@ -283,21 +283,37 @@ function initialize(){
     	enemy.collisionRadius = 10;
         game.add(enemy);
         enemies.add(enemy);
-	
+
         enemy.update = jsGame.extend(enemy.update, function(elapsed){
 		if(enemy.fuzzyTimer <= 0){
-		    enemy.fuzzies = Math.max(enemy.fuzzies - 2, 0);
+		    enemy.fuzzies = Math.max(enemy.fuzzies - 4, 0);
 		    enemy.fuzzyTimer = 1
 		}else{
 		    enemy.fuzzyTimer -= game.elapsed;
 		}
+		
+		if(enemy.fuzzies <= 50 && enemy.fuzzies > 15)
+		{
+            enemy.setImage('./assets/fluff2.png', 80, 80);
+        }
+
+        if(enemy.fuzzies > 50)
+        {
+            enemy.setImage('./assets/fluff.png', 80, 80);
+        }
+        
+        if(enemy.fuzzies < 15)
+        {
+            enemy.setImage('./assets/fluff3.png', 80, 80);
+        }
+
 		if(enemy.fuzzies <= 15){
 		    enemy.state = 'fighting';
 		}
 		else{
 		    enemy.state = 'wandering';
 		}
-		
+
 		if(enemy.health <= 0){
 		    // Play death animation.
 		    enemy.update = function(elapsed){
@@ -492,6 +508,7 @@ function initialize(){
 
             if(enemy.fightTarget && enemy.state == "fighting")
             {
+              context.lineWidth = 1;
               context.strokeStyle = "rgb(255,0,0)";
               context.beginPath();
               context.moveTo(enemy.x, enemy.y);
