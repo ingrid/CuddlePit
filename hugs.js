@@ -286,7 +286,7 @@ function initialize(){
 
         enemy.update = jsGame.extend(enemy.update, function(elapsed){
 		if(enemy.fuzzyTimer <= 0){
-		    enemy.fuzzies = Math.max(enemy.fuzzies - 4, 0);
+		    enemy.fuzzies = Math.max(enemy.fuzzies - 3, 0);
 		    enemy.fuzzyTimer = 1
 		}else{
 		    enemy.fuzzyTimer -= game.elapsed;
@@ -307,7 +307,7 @@ function initialize(){
             enemy.setImage('./assets/fluff3.png', 80, 80);
         }
 
-		if(enemy.fuzzies <= 15){
+		if(enemy.fuzzies <= 50){
 		    enemy.state = 'fighting';
 		}
 		else{
@@ -354,6 +354,7 @@ function initialize(){
 
   				if(dx*dx+dy*dy <= 35*35 && enemy.attackTimer <= 0){
   				    enemy.fightTarget.health -= 10;
+  				    enemy.fuzzies += 5;
   				    //alert(enemy.fightTarget.health);
   				    enemy.attackTimer = 1.5;
   				}
