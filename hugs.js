@@ -137,6 +137,7 @@ function initialize(){
 	player.setImage('./assets/penguin.png', 80, 80);
 	var walkAnim = jsGame.Animation.Strip([1, 2, 3, 4, 5, 6], 80, 80, 7.0);
 	var idleAnim = jsGame.Animation.Strip([0], 80, 80, 1.0);
+	var hugAnim = jsGame.Animation.Strip([7], 80, 80, 1.0);
 	player.playAnimation(walkAnim);
     game.add(player);
     
@@ -184,7 +185,14 @@ function initialize(){
 		    player.playAnimation(walkAnim);
 		}
 		else{
-		    player.playAnimation(idleAnim);
+            if(player.hugging)
+            {
+                player.playAnimation(hugAnim);
+            }
+            else
+            {
+		      player.playAnimation(idleAnim);
+            }
 		}
 
         if(justClicked && !player.hugging)
@@ -218,6 +226,46 @@ function initialize(){
 	    });
 
 	player.render = function(context, camera){
+
+        context.lineCap = 'round';
+
+        context.beginPath();
+        context.strokeStyle = "#0f3591";
+        context.lineWidth = 6;
+        context.moveTo(player.hugarms.left[0].x + player.x,player.hugarms.left[0].y + player.y);
+        context.lineTo(player.hugarms.left[1].x + player.x,player.hugarms.left[1].y + player.y);
+        context.moveTo(player.hugarms.left[1].x + player.x,player.hugarms.left[1].y + player.y);
+        context.lineTo(player.hugarms.left[0].x*0.8 + player.x,player.hugarms.left[0].y*0.8 + player.y);
+        context.stroke();
+        context.closePath();
+
+        context.beginPath();
+        context.strokeStyle = "#1e62ba";
+        context.lineWidth = 6;
+        context.moveTo(player.hugarms.left[1].x + player.x - 1,player.hugarms.left[1].y + player.y - 3);
+        context.lineTo(player.hugarms.left[0].x*0.7 + player.x - 1,player.hugarms.left[0].y*0.7 + player.y - 3);
+        context.stroke();
+        context.closePath();
+
+
+        context.beginPath();
+        context.strokeStyle = "#0f3591";
+        context.lineWidth = 6;
+        context.moveTo(player.hugarms.right[0].x + player.x,player.hugarms.right[0].y + player.y);
+        context.lineTo(player.hugarms.right[1].x + player.x,player.hugarms.right[1].y + player.y);
+        context.moveTo(player.hugarms.right[1].x + player.x,player.hugarms.right[1].y + player.y);
+        context.lineTo(player.hugarms.right[0].x*0.8 + player.x,player.hugarms.right[0].y*0.8 + player.y);
+        context.stroke();
+        context.closePath();
+
+        context.beginPath();
+        context.strokeStyle = "#1e62ba";
+        context.lineWidth = 6;
+        context.moveTo(player.hugarms.right[1].x + player.x - 1,player.hugarms.right[1].y + player.y - 3);
+        context.lineTo(player.hugarms.right[0].x*0.7 + player.x - 1,player.hugarms.right[0].y*0.7 + player.y - 3);
+        context.stroke();
+        context.closePath();
+
         context.fillStyle = "rgba(0,0,0,0.2)";
         context.beginPath();
         context.arc(player.x + 5, player.y + 7, 25, 0, Math.PI*2, true);
@@ -238,21 +286,12 @@ function initialize(){
 				      player.height);
 			context.restore();
 		}
+		
+
 	};
     proj = {x:0, y:0};
 	game.render = jsGame.extend(game.render, function(context, camera){
-        game._context.strokeStyle = "#1e62ba";
-        game._context.lineWidth = 9;
-        game._context.beginPath();
-        game._context.moveTo(player.hugarms.left[0].x + player.x,player.hugarms.left[0].y + player.y);
-        game._context.lineTo(player.hugarms.left[1].x + player.x,player.hugarms.left[1].y + player.y);
-        game._context.closePath();
-        game._context.stroke();
-        game._context.beginPath();
-        game._context.moveTo(player.hugarms.right[0].x + player.x,player.hugarms.right[0].y + player.y);
-        game._context.lineTo(player.hugarms.right[1].x + player.x,player.hugarms.right[1].y + player.y);
-        game._context.closePath();
-        game._context.stroke();
+
     });
     
     game.update = jsGame.extend(game.update, function(){
