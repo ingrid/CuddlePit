@@ -39,23 +39,27 @@ function initialize(){
 	gonnagetcha4.volume = 0.7; gonnagetcha5.volume = 0.7; harpeffect.volume = 0.7;
 	sigh.volume = 0.7;
 
-	game.heartPool = [];
-	
+ 	game.heartPool = [];
+
+	game.makeParticle = function(type){
+	    self = jsGame.Sprite(0,0);
+	    self.visible = false;
+	    self.lifeSpan = 5;
+	    self.timer = 0;
+	    self.layer = 3; // Add random.
+	    game.add(self);
+	    return self;
+	};
 
 	game.makeHeart = function(){
-	    var heart = jsGame.Sprite(0,0);
+	    var heart = game.makeParticle();
 	    heart.setImage("./assets/heart.png");
-	    heart.visible = false;
-	    heart.lifeSpan = 5;
-	    heart.timer = 0;
-	    heart.inUse = false;
 	    heart.layer = 3;
 	    heart.drawHeart = function(x, y){
 		heart.x = x;
 		heart.y = y;
 		heart.ancor = x;
 		heart.visible = true;
-		heart.inUse = true;
 		heart.update = function(elapsed){
 		    if(heart.timer >= heart.lifeSpan){
 			heart.timer = 0;
@@ -70,21 +74,61 @@ function initialize(){
 			heart.x = x - Math.sin(heart.timer*3) * 20;
 			heart.timer += game.elapsed;
 		    }
-		    };
+		};
 	    };
-	    game.add(heart);
 	    return heart;
 	};
+	/**
+	game.makePow = function(){
+	    var pow = game.makeParticle();
+	    pow.setImage('./assets/pow.png');
+	    pow.animation = jsGame.Animation.Strip([0, 1, 2], 30, 30, 6.0);
+	    pow.timer = 0;
+	    pow.lifeSpan = 0.5;
+	    pow.drawPow = function(x, y){
+		pow.x = x + Math.random() * 10 - 5;
+		pow.y = y + Math.random() * 10 - 5;
+		pow.visible = true;
+		pow.playAnimation(pow.animation);
+		pow.oldUpdate = pow.update;
+		pow.update = function (elapsed){
+		    pow.oldUpdate(elapsed);
+		    if(pow.timer >= pow.lifeSpan){
+			pow.timer = 0;
+			pow.visible = false;
+			pow.update = function(elapsed){
+			};
+		    }else{
+			pow.timer += game.elapsed;
+			// ???
+		    }
+		};
+	    };
+	    return pow;
+	};
+
+	game.powPool = [];
+
+	**/
+
 	for(var h = 0; h < 30; h++){
 	    game.heartPool[h] = game.makeHeart();
+	    //	    game.powPool[h] = game.makePow();
+	    //	    game.heartPool[h] = game.makeHeart();
 	}
-	for(var h = 0; h < game.heartPool.length; h++){
-	    game.heartPool[h].visible = false;
-	}
-
+	/**
+	game.getPow = function(){
+	    for(var p = 0; p < game.powPool.length; p++){
+		if(game.powPool[p].visible === false){
+		    return game.powPool[p];
+		}
+	    }
+	    return undefined;
+	};
+	**/
 	game.getHeart = function(){
 	    for(var h = 0; h < game.heartPool.length; h++){
-		if(game.heartPool[h].inUse === false){
+		if(game.heartPool[h].visible === false){
 		    return game.heartPool[h];
 		}
 	    }
@@ -592,6 +636,21 @@ function initialize(){
   				var dy = enemy.y - enemy.fightTarget.y;
 
   				if(dx*dx+dy*dy <= 35*35 && enemy.attackTimer <= 0){
+				    /**
+				    var spawnPow = game.getPow();
+				    if(spawnPow != undefined){
+					spawnPow.drawPow(enemy.x, enemy.y);
+				    }
+				    **/
+				    var spawnPow = jsGame.Sprite(enemy.x + Math.random() * 10 - 5, enemy.y + Math.random() * 10 - 5);
+				    spawnPow.setImage('./assets/pow.png', 30, 30);
+				    var powAnim = jsGame.Animation.Strip([0, 1, 2], 30, 30, 12.0);
+				    spawnPow.playAnimation(powAnim);
+				    spawnPow.layer = 3;
+				    powAnim.callback = function(){
+					game.remove(spawnPow);
+				    };
+				    game.add(spawnPow);
   				    enemy.fightTarget.health -= 10;
   				    enemy.fuzzies -= 5;
   				    //alert(enemy.fightTarget.health);
