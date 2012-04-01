@@ -34,6 +34,10 @@ function initialize(){
 	var punch1 = jsGame.Sound.load('./assets/punch1.mp3');
 	var punch2 = jsGame.Sound.load('./assets/punch2.mp3');
 	var sigh = jsGame.Sound.load('./assets/sigheffect2.mp3');
+	
+	gonnagetcha1.volume = 0.7; gonnagetcha2.volume = 0.7; gonnagetcha3.volume = 0.7;
+	gonnagetcha4.volume = 0.7; gonnagetcha5.volume = 0.7; harpeffect.volume = 0.7;
+	sigh.volume = 0.7;
 
 	var happySong2 = jsGame.Sound.load('./assets/cuddlepitmusicbright.mp3');
 	happySong2.loop = true;
@@ -440,7 +444,7 @@ function initialize(){
         enemies.add(enemy);
 
         enemy.update = jsGame.extend(enemy.update, function(elapsed){
-        if(enemy.health < 0) { return; }
+        if(enemy.state == 'dead') { enemy.velocity.x = enemy.velocity.y = 0; return; }
 		if(enemy.fuzzyTimer <= 0){
 		    enemy.fuzzies = Math.max(enemy.fuzzies - 3, 0);
 		    enemy.fuzzyTimer = 1
@@ -476,7 +480,7 @@ function initialize(){
 
         enemy.aggroRadius = Math.max(0,(70 - enemy.fuzzies)*2);
 
-		if(enemy.health <= 0){
+		if(enemy.health <= 0 && enemy.state != 'dead'){
 		    // Play death animation.
 		    enemy.state = 'dead';
 		    enemy.collisionRadius = 0;
@@ -485,6 +489,7 @@ function initialize(){
 		    enemy.velocity.x = 0;
 		    enemy.velocity.y = 0;
 		    enemy.layer = -1;
+		    pop.play();
 		    return;
 		}
 
@@ -522,6 +527,15 @@ function initialize(){
   				    enemy.fuzzies -= 5;
   				    //alert(enemy.fightTarget.health);
   				    enemy.attackTimer = 1.5;
+  				    if(Math.random() > 0.5)
+  				    {
+  				      punch1.play();
+                    }
+                    else
+                    {
+                      punch2.play(); 
+                    }
+
   				}
   				else{
   				    enemy.attackTimer -= game.elapsed;
