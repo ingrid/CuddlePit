@@ -90,9 +90,9 @@ function initialize(){
 	    }
 	};
 
-	game.highMoodMark = 70;
+	game.highMoodMark = 80;
 	game.goal = 60;
-	game.lowMoodMark = 60;
+	game.lowMoodMark = 70;
 
 	game.mood = 'happy'; // On of happy or sad.
 	
@@ -301,6 +301,7 @@ function initialize(){
 		game.mood = 'sad';
 		fadeFlag = true;
 	    }
+
 	});
 
     // Level timer.
