@@ -401,8 +401,6 @@ function initialize(){
     // Level timer and Game Over
     game.numEnemies = 15;
 	game.minEnemiesToWin = Math.ceil(game.goal * game.numEnemies / 100);
-	alert(game.minEnemiesToWin);
-
 	game.timer = 0;
     game.levelTimeLimit = 85;
     
