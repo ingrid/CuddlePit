@@ -21,9 +21,9 @@ function initialize(){
 	// SFX
 	var deathcry = jsGame.Sound.load('./assets/deathcry.mp3');
 	var footstep2 = jsGame.Sound.load('./assets/footstep2.mp3');
-	footstep2.volume = 0.5;
+	footstep2.volume = 0.9;
 	var footstep1 = jsGame.Sound.load('./assets/footstep1.mp3');
-	footstep1.volume = 0.2;
+	footstep1.volume = 0.4;
 	var gonnagetcha1 = jsGame.Sound.load('./assets/gonnagetcha1.mp3');
 	var gonnagetcha2 = jsGame.Sound.load('./assets/gonnagetcha2.mp3');
 	var gonnagetcha3 = jsGame.Sound.load('./assets/gonnagetcha3.mp3');
@@ -151,6 +151,7 @@ function initialize(){
 	player.setImage('./assets/penguin.png', 80, 80);
 	var walkAnim = jsGame.Animation.Strip([1, 2, 3, 4, 5, 6], 80, 80, 7.0);
 	var idleAnim = jsGame.Animation.Strip([0], 80, 80, 1.0);
+	var hugAnim = jsGame.Animation.Strip([7], 80, 80, 1.0);
 	player.playAnimation(walkAnim);
 	game.add(player);
     
@@ -200,7 +201,14 @@ function initialize(){
 		    player.playAnimation(walkAnim);
 		}
 		else{
-		    player.playAnimation(idleAnim);
+            if(player.hugging)
+            {
+                player.playAnimation(hugAnim);
+            }
+            else
+            {
+		      player.playAnimation(idleAnim);
+            }
 		}
 
         if(justClicked && !player.hugging)
@@ -235,12 +243,67 @@ function initialize(){
 	    });
 
 	player.render = function(context, camera){
+
+
+        context.lineCap = 'round';
+
+        context.beginPath();
+        context.strokeStyle = "#0f3591";
+        context.lineWidth = 6;
+        context.moveTo(player.hugarms.left[0].x + player.x,player.hugarms.left[0].y + player.y);
+        context.lineTo(player.hugarms.left[1].x + player.x,player.hugarms.left[1].y + player.y);
+        context.moveTo(player.hugarms.left[1].x + player.x,player.hugarms.left[1].y + player.y);
+        context.lineTo(player.hugarms.left[0].x*0.8 + player.x,player.hugarms.left[0].y*0.8 + player.y);
+        context.stroke();
+        context.closePath();
+
+        context.beginPath();
+        context.strokeStyle = "#1e62ba";
+        context.lineWidth = 6;
+        context.moveTo(player.hugarms.left[1].x + player.x - 1,player.hugarms.left[1].y + player.y - 3);
+        context.lineTo(player.hugarms.left[0].x*0.7 + player.x - 1,player.hugarms.left[0].y*0.7 + player.y - 3);
+        context.stroke();
+        context.closePath();
+
+
+        context.beginPath();
+        context.strokeStyle = "#0f3591";
+        context.lineWidth = 6;
+        context.moveTo(player.hugarms.right[0].x + player.x,player.hugarms.right[0].y + player.y);
+        context.lineTo(player.hugarms.right[1].x + player.x,player.hugarms.right[1].y + player.y);
+        context.moveTo(player.hugarms.right[1].x + player.x,player.hugarms.right[1].y + player.y);
+        context.lineTo(player.hugarms.right[0].x*0.8 + player.x,player.hugarms.right[0].y*0.8 + player.y);
+        context.stroke();
+        context.closePath();
+
+        context.beginPath();
+        context.strokeStyle = "#1e62ba";
+        context.lineWidth = 6;
+        context.moveTo(player.hugarms.right[1].x + player.x - 1,player.hugarms.right[1].y + player.y - 3);
+        context.lineTo(player.hugarms.right[0].x*0.7 + player.x - 1,player.hugarms.right[0].y*0.7 + player.y - 3);
+        context.stroke();
+        context.closePath();
+
+        context.fillStyle = "rgba(0,0,0,0.2)";
+        context.beginPath();
+        context.arc(player.x + 5, player.y + 7, 25, 0, Math.PI*2, true);
+        context.closePath();
+        context.fill();
+
 	    var newFrame = player.frame.x / player.width;
 	    if((player.currFrame != newFrame) && ((newFrame === 2) || (newFrame === 5))){
 		if(Math.random() >= 0.5){
 		    footstep1.play();
+		    if(footstep1.currentTime > 0)
+		    {
+                footstep2.play();
+            }
 		}else{
 		    footstep2.play();
+		    if(footstep2.currentTime > 0)
+		    {
+                footstep1.play();
+            }
 		}
 	    }
 	    player.currFrame = newFrame;
@@ -249,6 +312,7 @@ function initialize(){
 	    context.arc(player.x + 5, player.y + 7, 25, 0, Math.PI*2, true);
 	    context.closePath();
 	    context.fill();
+
 		if(player.image !== null && player.visible){
 		    context.save();
 		    context.translate(player.x, player.y);
@@ -264,21 +328,12 @@ function initialize(){
 				      player.height);
 			context.restore();
 		}
+		
+
 	};
     proj = {x:0, y:0};
 	game.render = jsGame.extend(game.render, function(context, camera){
-        game._context.strokeStyle = "#1e62ba";
-        game._context.lineWidth = 9;
-        game._context.beginPath();
-        game._context.moveTo(player.hugarms.left[0].x + player.x,player.hugarms.left[0].y + player.y);
-        game._context.lineTo(player.hugarms.left[1].x + player.x,player.hugarms.left[1].y + player.y);
-        game._context.closePath();
-        game._context.stroke();
-        game._context.beginPath();
-        game._context.moveTo(player.hugarms.right[0].x + player.x,player.hugarms.right[0].y + player.y);
-        game._context.lineTo(player.hugarms.right[1].x + player.x,player.hugarms.right[1].y + player.y);
-        game._context.closePath();
-        game._context.stroke();
+
     });
     
     game.update = jsGame.extend(game.update, function(){
@@ -569,11 +624,14 @@ function initialize(){
 
 
 	    enemy.render = function(context, camera){
-    		context.fillStyle = "rgba(0,0,0,0.2)";
-    		context.beginPath();
-    		context.arc(enemy.x + 5, enemy.y + 7, 20, 0, Math.PI*2, true);
-    		context.closePath();
-    		context.fill();
+            if(enemy.health > 0)
+            {
+        		context.fillStyle = "rgba(0,0,0,0.2)";
+        		context.beginPath();
+        		context.arc(enemy.x + 5, enemy.y + 7, 20, 0, Math.PI*2, true);
+        		context.closePath();
+        		context.fill();
+            }
 
     		if(enemy.image !== null && enemy.visible){
     		    context.save();
@@ -590,22 +648,6 @@ function initialize(){
     				      enemy.height);
     			context.restore();
     		}
-
-            if(enemy.state == "wandering") { context.fillStyle="rgb(0,255,0)"; }
-            if(enemy.state == "fighting") { context.fillStyle="rgb(255,0,0)"; }
-            if(enemy.state == "dead") { context.fillStyle="rgb(0,0,0)"; }
-            context.fillRect(enemy.x, enemy.y, 5,5);
-
-            if(enemy.fightTarget && enemy.state == "fighting")
-            {
-              context.lineWidth = 1;
-              context.strokeStyle = "rgb(255,0,0)";
-              context.beginPath();
-              context.moveTo(enemy.x, enemy.y);
-              context.lineTo(enemy.fightTarget.x, enemy.fightTarget.y);
-              context.closePath();
-              context.stroke();
-            }
     	};
     }
     for(var i = 0; i < 15; i++)
