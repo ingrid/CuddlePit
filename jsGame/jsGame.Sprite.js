@@ -7,6 +7,8 @@ jsGame.Sprite = function(x, y){
 	self.width = 0;
 	self.height = 0;
 	
+	self.layer = 0;
+
 	self.image = null;
 	self.visible = true; // The sprite can be hidden by setting this to false
 	
