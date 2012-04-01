@@ -48,6 +48,7 @@ jsGame.Sprite = jsGame.extend(jsGame.Sprite, function(self){
 	self.lastAnimation = null;
 	self.frame = null;
 	self.animationFrame = 0;
+	self.forceAnimation = false;
 
 	// Similar to Sprite's setImage, but we need to care about frameWidth and
 	// frameHeight
@@ -67,7 +68,14 @@ jsGame.Sprite = jsGame.extend(jsGame.Sprite, function(self){
 	};
 
 	// Simply sets the animation to whatever you pass it.
-	self.playAnimation = function(animation) { 
+	self.playAnimation = function(animation, force) { 
+	    if(force === undefined){
+		force = false;
+	    }
+
+	    if(force === true){
+		self.forceAnimation = true;
+	    }		
 		self.animation = animation;
 		if(self.frame === null){
 			self.frame = self.animation.frames[0];
@@ -102,7 +110,7 @@ jsGame.Sprite = jsGame.extend(jsGame.Sprite, function(self){
 			// changes. It's common for people to make the same playAnimation
 			// call every tick, so make sure we only reset stuff if it's a new
 			// anim.
-			if(self.animation !== self.lastAnimation){
+			if((self.animation !== self.lastAnimation) || (self.forceAnimation === true)){
 				self.animationFrame = 0;
 				self.frame = self.animation.frames[0];
 			}
