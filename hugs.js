@@ -622,17 +622,17 @@ function initialize(){
 			}
 
 		// Fence logic.
-		if(enemy.x <= 10){
-		    enemy.acceleration.x = 10;
+		if(enemy.x <= 40){
+		    enemy.velocity.x = 20;
 		}
-		if(enemy.x >= 690){
-		    enemy.acceleration.x = -10;
+		if(enemy.x >= 760){
+		    enemy.velocity.x = -20;
 		}
-		if(enemy.y <= 10){
-		    enemy.acceleration.y = 10;
+		if(enemy.y <= 40){
+		    enemy.velocity.y = 20;
 		}
-		if(enemy.y >= 790){
-		    enemy.acceleration.y = -10;
+		if(enemy.y >= 560){
+		    enemy.velocity.y = -20;
 		}
 	    });
 
