@@ -38,7 +38,9 @@ jsGame.Sprite = jsGame.extend(jsGame.Sprite, function(self){
 	// 0 = left and 1 = right. These control if the sprite is flipped
 	// horizontally or not.
 	jsGame.Sprite.LEFT = 0;
-	jsGame.Sprite.RIGHT = 1;		
+	jsGame.Sprite.RIGHT = 1;	
+    
+    self._lasturl = ""
 	
 	self.facing = jsGame.Sprite.RIGHT;
 	self.animation = null;
@@ -50,6 +52,8 @@ jsGame.Sprite = jsGame.extend(jsGame.Sprite, function(self){
 	// frameHeight
 	self.setImage = function(url, frameWidth, frameHeight)
 	{
+        if(self._lasturl === url) { return; }
+        self._lasturl = url
 		var tempImage = new Image();
 		tempImage.onload = function(){
 			self.image = tempImage;
