@@ -243,7 +243,7 @@ function initialize(){
 
     makeEnemy = function(x,y){
 	var enemy = jsGame.Sprite(x, y);
-        enemy.setImage('./assets/fluff.png', 80, 80);
+        enemy.setImage('./assets/fluff2.png', 80, 80);
     	enemy.walkAnim = jsGame.Animation.Strip([1,2,3,4,5,6], 80, 80, 7.0);
     	enemy.idleAnim = jsGame.Animation.Strip([0], 80, 80, 1.0);
     	enemy.playAnimation(enemy.walkAnim);
