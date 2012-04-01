@@ -34,6 +34,10 @@ function initialize(){
 	var punch1 = jsGame.Sound.load('./assets/punch1.mp3');
 	var punch2 = jsGame.Sound.load('./assets/punch2.mp3');
 	var sigh = jsGame.Sound.load('./assets/sigheffect2.mp3');
+	
+	gonnagetcha1.volume = 0.7; gonnagetcha2.volume = 0.7; gonnagetcha3.volume = 0.7;
+	gonnagetcha4.volume = 0.7; gonnagetcha5.volume = 0.7; harpeffect.volume = 0.7;
+	sigh.volume = 0.7;
 
 	var heartPool = [];
 	
@@ -59,10 +63,12 @@ function initialize(){
 	var happyBG = jsGame.Sprite(0,0);
 	happyBG.setImage("./assets/happybg.png");
 	happyBG.fade = 1;
+	happyBG.layer=-2;
 
 	var sadBG = jsGame.Sprite(0,0);
 	sadBG.setImage("./assets/sadbg.png");
 	sadBG.fade = 0;
+	sadBG.layer=-2;
 
 	var oldHappyRender = happyBG.render;
 	var oldSadRender = sadBG.render;
@@ -117,7 +123,7 @@ function initialize(){
 	};
 
 	game.highMoodMark = 80;
-	game.goal = 60;
+	game.goal = 75;
 	game.lowMoodMark = 70;
 
 	game.mood = 'happy'; // On of happy or sad.
@@ -190,6 +196,7 @@ function initialize(){
 	player.collisionRadius = 25;
 	
 	player.currFrame = 1;
+	player.layer = 1;
 
 	player.update = jsGame.extend(player.update, function(elapsed){
 	    player.velocity.x = 0;
@@ -386,6 +393,7 @@ function initialize(){
 
     game.avgFuzz = undefined;
 
+    
     // Average fuzzy level.
     game.update = jsGame.extend(game.update, function(){
 	    var totalFuzz = 0;
@@ -405,17 +413,32 @@ function initialize(){
 
 	});
 
-    // Level timer.
-    game.timer = 0;
-    game.levelTimeLimit = 40;
+    // Level timer and Game Over
+    game.numEnemies = 15;
+	game.minEnemiesToWin = Math.ceil(game.goal * game.numEnemies / 100);
+	game.timer = 0;
+    game.levelTimeLimit = 85;
+    
     game.update = jsGame.extend(game.update, function(){
-	    if(game.timer >= game.levelTimeLimit){
-		if(game.avgFuzz >= game.goal){
-		    // Win!
-		}else{
-		    // Loss!
+		game.numEnemiesAlive = game.numEnemies;
+		for(var f = 0; f < enemies.getChildren().length; f++){
+			var candidate = enemies.getChildren()[f];
+			if (candidate.state === 'dead')
+				game.numEnemiesAlive--;
 		}
-	    }else{
+
+	    if(game.timer >= game.levelTimeLimit){
+			if(game.avgFuzz >= game.goal){
+			    //Good Ending
+			    alert("You Win!  Fuzzzytime!");
+			}else{
+				//Bad Ending (Time up)
+			    alert("You Lose!  Poor penguin!");
+			}
+	    }else if(game.numEnemiesAlive < game.minEnemiesToWin){
+			//Bad Ending, too many died
+			alert("You Lose!  Too many Fluff Demons died!");
+		}else{
 		game.timer += game.elapsed;
 	    }
 	});
@@ -425,17 +448,20 @@ function initialize(){
         enemy.setImage('./assets/fluff.png', 80, 80);
     	enemy.walkAnim = jsGame.Animation.Strip([1,2,3,4,5,6], 80, 80, 7.0);
     	enemy.idleAnim = jsGame.Animation.Strip([0], 80, 80, 1.0);
+    	enemy.dieAnim = jsGame.Animation.Strip([7,8,9,10,11,12,13,14], 80, 80, 16.0);
+    	enemy.dieAnim.looping = false;
     	enemy.playAnimation(enemy.walkAnim);
     	enemy.wanderTimer = 0;
     	enemy.targetX = 0;
     	enemy.targetY = 0;
-	
+
 	//Default Enemy starting state
 	enemy.fuzzies = 60 + Math.random() * 20;
 	enemy.health = 100;
 	enemy.state = 'wandering';
-	enemy.aggroRadius = 50;
+	enemy.aggroRadius = 20;
 	enemy.attackTimer = 0;
+	enemy.layer = Math.random();
 	enemy.hugged = false;
 	enemy.fuzzyTimer = 1;
 
@@ -445,13 +471,14 @@ function initialize(){
         enemies.add(enemy);
 
         enemy.update = jsGame.extend(enemy.update, function(elapsed){
+        if(enemy.state == 'dead') { enemy.velocity.x = enemy.velocity.y = 0; return; }
 		if(enemy.fuzzyTimer <= 0){
 		    enemy.fuzzies = Math.max(enemy.fuzzies - 3, 0);
 		    enemy.fuzzyTimer = 1
 		}else{
 		    enemy.fuzzyTimer -= game.elapsed;
 		}
-		
+
 		//Enemy Irritated state
 		if(enemy.fuzzies <= 70 && enemy.fuzzies > 25)
 		{
@@ -469,7 +496,7 @@ function initialize(){
         {
             enemy.setImage('./assets/fluff3.png', 80, 80);
         }
-		
+
 		//When an enemy fights
 		if(enemy.fuzzies <= 70){
 		    enemy.state = 'fighting';
@@ -478,13 +505,19 @@ function initialize(){
 		    enemy.state = 'wandering';
 		}
 
-		if(enemy.health <= 0){
+        enemy.aggroRadius = Math.max(0,(70 - enemy.fuzzies)*2);
+
+		if(enemy.health <= 0 && enemy.state != 'dead'){
 		    // Play death animation.
-		    enemy.update = function(elapsed){
-		    };
 		    enemy.state = 'dead';
 		    enemy.collisionRadius = 0;
-		    enemy.visible = false;
+		    //enemy.visible = false;
+		    enemy.playAnimation(enemy.dieAnim);
+		    enemy.velocity.x = 0;
+		    enemy.velocity.y = 0;
+		    enemy.layer = -1;
+		    pop.play();
+		    return;
 		}
 
 		else{
@@ -521,6 +554,15 @@ function initialize(){
   				    enemy.fuzzies -= 5;
   				    //alert(enemy.fightTarget.health);
   				    enemy.attackTimer = 1.5;
+  				    if(Math.random() > 0.5)
+  				    {
+  				      punch1.play();
+                    }
+                    else
+                    {
+                      punch2.play(); 
+                    }
+
   				}
   				else{
   				    enemy.attackTimer -= game.elapsed;
@@ -536,7 +578,7 @@ function initialize(){
 			    var vec = [];
 			    vec.x = enemy.x - enemy.fightTarget.x;
 			    vec.y = enemy.y - enemy.fightTarget.y;
-			    
+
 			    var dist = Math.sqrt(vec.x * vec.x + vec.y * vec.y);
 			    
 			    if(dist != 0){
@@ -559,6 +601,7 @@ function initialize(){
 		    }
 		}
 		if(enemy.state === 'wandering'){
+            enemy.fightTarget = undefined;
 		    if(enemy.wanderTimer <= 0){
 			enemy.wanderTimer = Math.random() * 5 + 1;
 			enemy.targetX = Math.random() * 700 + 50;
@@ -616,8 +659,9 @@ function initialize(){
 						   arm[1].y - arm[0].y);
 				if(leftProj.x * leftProj.x + leftProj.y * leftProj.y <= player.hugMagnitude * player.hugMagnitude)
 				    {
+                    if(leftProj.x * player.forward.x + leftProj.y * player.forward.y > 0) { return; }
 					ldx = leftProj.x - (enemy.x - arm[0].x - player.x); ldy = leftProj.y - (enemy.y - arm[0].y - player.y);
-					if( ldx*ldx+ldy*ldy <= 50)
+					if( ldx*ldx+ldy*ldy <= 100)
 					    {
 
 						if(player.hugSoundPlayed === false){
@@ -692,7 +736,8 @@ function initialize(){
     		}
     	};
     }
-    for(var i = 0; i < 15; i++)
+
+    for(var i = 0; i < game.numEnemies; i++)
 	{
 	    makeEnemy(Math.random()*700+50,Math.random()*500+50);
 	}

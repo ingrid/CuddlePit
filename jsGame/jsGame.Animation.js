@@ -14,6 +14,7 @@ jsGame.Animation.Strip = function(frames, frameWidth, frameHeight, rate, offsetX
 	if(offsetX === undefined) { offsetX = 0; }
 	if(offsetY === undefined) { offsetY = 0; }
 	animation = {};
+	animation.looping = true;
 	animation.rate = rate;
 	animation.frames = [];
 	animation.callback = callback;
@@ -79,12 +80,19 @@ jsGame.Sprite = jsGame.extend(jsGame.Sprite, function(self){
 	self.update = jsGame.extend(self.update, function(elapsed){
 		if(self.animation !== null){
 			self.animationFrame = (self.animationFrame + (elapsed * self.animation.rate));
-			if(self.animationFrame > self.animation.frames.length) // Wrap around the end
+			if(self.animationFrame >= self.animation.frames.length) // Wrap around the end
 			{
-				self.animationFrame = 0;
-				if(self.animation.callback !== undefined){
-					self.animation.callback();
-				}
+                if(self.animation.looping)
+                {
+    				self.animationFrame = 0;
+    				if(self.animation.callback !== undefined){
+    					self.animation.callback();
+    				}
+                }
+                else
+                {
+                    self.animationFrame = self.animation.frames.length - 1;
+                }
 			}
 
 			// Make sure it's an integer frame index

@@ -67,6 +67,7 @@ jsGame.Game = function(width, height, parentElement){
 		var ctx = self._context;
 		ctx.fillStyle = self._bgColor;
 		ctx.fillRect(0,0,self.width,self.height);
+		self._children.sort(function(a,b){return b.layer-a.layer;});
 		for (var i = self._children.length-1; i >= 0; --i)
 		{
 			self._children[i].render(ctx, self.camera);
