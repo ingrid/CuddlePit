@@ -1,7 +1,21 @@
 window.onload = function(){
     jsGame.Sound.load('./assets/cuddlehappy2.wav');
     jsGame.Sound.load('./assets/cuddlesad.mp3');
-    initialize();
+    //initialize();
+    var titleGame = jsGame.Game(800, 600);
+    
+    var titleImg = jsGame.Sprite(0, 0);
+    titleImg.setImage("./assets/title.png");
+    titleGame.add(titleImg);
+
+    titleGame._canvas.onmousedown = function(e)
+    {
+        titleGame.ended = true;
+        titleGame._canvas.parentNode.removeChild(titleGame._canvas);
+        initialize();
+    }
+
+    titleGame.run();
 }
 
 function initialize(){
@@ -45,7 +59,7 @@ function initialize(){
 	var fadeTime = 0;
 	var valOld = 1;
 	var valNew = 0;
-	var fadeInterval = 0.5;
+	var fadeInterval = 3;
 	var fadeFlag = false;
 	context = game._canvas.getContext('2d');
 	game.crossfade = function(elapsed){
@@ -397,7 +411,7 @@ function initialize(){
 
   				if(dx*dx+dy*dy <= 35*35 && enemy.attackTimer <= 0){
   				    enemy.fightTarget.health -= 10;
-  				    enemy.fuzzies += 5;
+  				    enemy.fuzzies -= 5;
   				    //alert(enemy.fightTarget.health);
   				    enemy.attackTimer = 1.5;
   				}

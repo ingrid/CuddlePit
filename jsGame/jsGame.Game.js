@@ -13,6 +13,7 @@ jsGame.Game = function(width, height, parentElement){
 // Public
 	self.width = width;
 	self.height = height;
+	self.ended = false;
 	self.fps = 80;		// Frequency
 	self.elapsed = 0; 	// Period
 	self.camera = {
@@ -32,6 +33,7 @@ jsGame.Game = function(width, height, parentElement){
 	self._canvas.height = self.height
 
 	self._tick = function(){
+        if(self.ended){ return; }
 		self.render();
 		self.update();
 		window.setTimeout(self._tick, 1000.0/self.fps);
