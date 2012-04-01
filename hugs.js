@@ -17,6 +17,17 @@ window.onload = function(){
 
 function initialize(){
 	var game = jsGame.Game(800, 600);
+	var gameOver = false;
+	var won = false;
+	var lost = false;
+	var gameOverBg;
+	var timerText = jsGame.Text(360,595);
+	timerText.layer = 6;
+	timerText.color = "rgb(255,255,255)";
+	timerText.text = "";
+	timerText.shadow = true;
+	timerText.font = "30pt arial bold";
+    game.add(timerText);
 
 	// SFX
 	var deathcry = jsGame.Sound.load('./assets/deathcry.mp3');
@@ -208,9 +219,9 @@ function initialize(){
 	    }
 	};
 
-	game.highMoodMark = 80;
+	game.highMoodMark = 70;
 	game.goal = 60;
-	game.lowMoodMark = 70;
+	game.lowMoodMark = 60;
 
 	game.mood = 'happy'; // On of happy or sad.
 	
@@ -246,10 +257,6 @@ function initialize(){
 	    }
 	    player.hugSoundPlayed = false;
 
-	    var voiceChance = Math.random();
-	    if(voiceChance <= 0.2){
-		gonnagetcha1.play();
-	    }
 	}
 
     var player = jsGame.Sprite(300, 150);
@@ -324,11 +331,16 @@ function initialize(){
             }
 		}
 
-        if(justClicked && !player.hugging)
+        if(justClicked && !player.hugging && !lost)
         {
             player.hugging = true;
             player.hugMagnitude = 0;
             player.hugAngle = player.hugStartAngle;
+    	    var voiceChance = Math.random();
+    	    console.log(voiceChance);
+    	    if(voiceChance <= 0.2){
+    		gonnagetcha1.play();
+    	    }
         }
         if(player.hugging)
         {
@@ -504,7 +516,7 @@ function initialize(){
 	game.minEnemiesToWin = Math.ceil(game.goal * game.numEnemies / 100);
 	game.timer = 0;
     game.levelTimeLimit = 85;
-    
+
     game.update = jsGame.extend(game.update, function(){
 		game.numEnemiesAlive = game.numEnemies;
 		for(var f = 0; f < enemies.getChildren().length; f++){
@@ -512,21 +524,70 @@ function initialize(){
 			if (candidate.state === 'dead')
 				game.numEnemiesAlive--;
 		}
-
-	    if(game.timer >= game.levelTimeLimit){
-			if(game.avgFuzz >= game.goal){
-			    //Good Ending
-			    //alert("You Win!  Fuzzzytime!");
-			}else{
-				//Bad Ending (Time up)
-			    //alert("You Lose!  Poor penguin!");
-			}
-	    }else if(game.numEnemiesAlive < game.minEnemiesToWin){
-			//Bad Ending, too many died
-			//alert("You Lose!  Too many Fluff Demons died!");
-		}else{
-		game.timer += game.elapsed;
-	    }
+		
+    	timerText.text = Math.max(0,Math.floor(game.levelTimeLimit - game.timer));
+        if(gameOverBg)
+        {
+            gameOverBg.fade += game.elapsed * 0.25;
+        }
+        if(!gameOver)
+        {
+    	    if(game.timer >= game.levelTimeLimit){
+                console.log(game.avgFuzz);
+    			if(game.avgFuzz >= game.goal){
+    			    //Good Ending
+                    var s = jsGame.Sprite(165, 200);
+                    s.setImage("assets/win.png");
+                    s.layer = 100;
+                    game.add(s);
+                    gameOver = true;
+                    gameOverBg = jsGame.Sprite(0, 0);
+                    gameOverBg.setImage("assets/winbg.png");
+                    gameOverBg.fade = 0;
+                    gameOverBg.layer = -1.5
+                    game.add(gameOverBg);
+                    won = true;
+    			}else{
+    				//Bad Ending (Time up)
+                    var s = jsGame.Sprite(281, 200);
+                    s.setImage("assets/lose.png");
+                    s.layer = 100;
+                    game.add(s);
+                    gameOver = true;
+                    gameOverBg = jsGame.Sprite(0, 0);
+                    gameOverBg.setImage("assets/deathbg.png");
+                    gameOverBg.fade = 0;
+                    gameOverBg.layer = -1.5
+                    game.add(gameOverBg);
+                    lost = true;
+    			}
+    	    }else if(game.numEnemiesAlive < game.minEnemiesToWin){
+    			//Bad Ending, too many died
+                  var s = jsGame.Sprite(281, 200);
+                  s.setImage("assets/lose.png");
+                  s.layer = 100;
+                  game.add(s);
+                  gameOver = true;
+                  gameOverBg = jsGame.Sprite(0, 0);
+                  gameOverBg.setImage("assets/deathbg.png");
+                  gameOverBg.fade = 0;
+                  gameOverBg.layer = -1.5
+                  game.add(gameOverBg);
+                  lost = true;
+    		}else{
+    		game.timer += game.elapsed;
+    	    }
+    	    if(gameOverBg)
+    	    {
+                var oldRender = gameOverBg.render;
+            	gameOverBg.render = function(context, camera){
+            	    context.save()
+            	    context.globalAlpha = gameOverBg.fade;
+            	    oldRender(context, camera);
+            	    context.restore();
+            	}
+            }
+         }
 	});
 
     makeEnemy = function(x,y){
@@ -542,7 +603,7 @@ function initialize(){
     	enemy.targetY = 0;
 
 	//Default Enemy starting state
-	enemy.fuzzies = 60 + Math.random() * 20;
+	enemy.fuzzies = 50 + Math.random() * 40;
 	enemy.health = 100;
 	enemy.state = 'wandering';
 	enemy.aggroRadius = 20;
@@ -559,32 +620,42 @@ function initialize(){
         enemy.update = jsGame.extend(enemy.update, function(elapsed){
         if(enemy.state == 'dead') { enemy.velocity.x = enemy.velocity.y = 0; return; }
 		if(enemy.fuzzyTimer <= 0){
-		    enemy.fuzzies = Math.max(enemy.fuzzies - 3, 0);
+            if(won)
+            {
+              enemy.fuzzies = Math.min(enemy.fuzzies + 5, 100);
+              enemy.targetX = player.x;
+              enemy.targetY = player.y;
+            }
+            else
+            {
+		      enemy.fuzzies = Math.max(enemy.fuzzies - 3, 0);
+            }
 		    enemy.fuzzyTimer = 1
 		}else{
 		    enemy.fuzzyTimer -= game.elapsed;
+
 		}
 
 		//Enemy Irritated state
-		if(enemy.fuzzies <= 70 && enemy.fuzzies > 25)
+		if(enemy.fuzzies <= 80 && enemy.fuzzies > 50)
 		{
             enemy.setImage('./assets/fluff2.png', 80, 80);
         }
 		
 		//Enemy Happy state
-        if(enemy.fuzzies > 70)
+        if(enemy.fuzzies > 80)
         {
             enemy.setImage('./assets/fluff.png', 80, 80);
         }
         
         //Enemy Angry State
-        if(enemy.fuzzies < 25)
+        if(enemy.fuzzies <= 50)
         {
             enemy.setImage('./assets/fluff3.png', 80, 80);
         }
 
 		//When an enemy fights
-		if(enemy.fuzzies <= 70){
+		if(enemy.fuzzies <= 50){
 		    enemy.state = 'fighting';
 		}
 		else{
@@ -652,7 +723,7 @@ function initialize(){
 				    };
 				    game.add(spawnPow);
   				    enemy.fightTarget.health -= 10;
-  				    enemy.fuzzies -= 5;
+  				    enemy.fuzzies -= 10;
   				    //alert(enemy.fightTarget.health);
   				    enemy.attackTimer = 1.5;
   				    if(Math.random() > 0.5)
