@@ -550,7 +550,7 @@ function initialize(){
     	enemy.targetY = 0;
 
 	//Default Enemy starting state
-	enemy.fuzzies = 65 + Math.random() * 30;
+	enemy.fuzzies = 50 + Math.random() * 40;
 	enemy.health = 100;
 	enemy.state = 'wandering';
 	enemy.aggroRadius = 20;
@@ -582,25 +582,25 @@ function initialize(){
 		}
 
 		//Enemy Irritated state
-		if(enemy.fuzzies <= 70 && enemy.fuzzies > 40)
+		if(enemy.fuzzies <= 80 && enemy.fuzzies > 50)
 		{
             enemy.setImage('./assets/fluff2.png', 80, 80);
         }
 		
 		//Enemy Happy state
-        if(enemy.fuzzies > 70)
+        if(enemy.fuzzies > 80)
         {
             enemy.setImage('./assets/fluff.png', 80, 80);
         }
         
         //Enemy Angry State
-        if(enemy.fuzzies <= 40)
+        if(enemy.fuzzies <= 50)
         {
             enemy.setImage('./assets/fluff3.png', 80, 80);
         }
 
 		//When an enemy fights
-		if(enemy.fuzzies <= 40){
+		if(enemy.fuzzies <= 50){
 		    enemy.state = 'fighting';
 		}
 		else{
@@ -652,8 +652,8 @@ function initialize(){
   				var dy = enemy.y - enemy.fightTarget.y;
 
   				if(dx*dx+dy*dy <= 35*35 && enemy.attackTimer <= 0){
-  				    enemy.fightTarget.health -= 7;
-  				    enemy.fuzzies -= 7;
+  				    enemy.fightTarget.health -= 10;
+  				    enemy.fuzzies -= 10;
   				    //alert(enemy.fightTarget.health);
   				    enemy.attackTimer = 1.5;
   				    if(Math.random() > 0.5)
