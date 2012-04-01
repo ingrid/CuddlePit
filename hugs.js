@@ -620,6 +620,20 @@ function initialize(){
 			    testArm(player.hugarms.left);
 			    testArm(player.hugarms.right);
 			}
+
+		// Fence logic.
+		if(enemy.x <= 10){
+		    enemy.acceleration.x = 10;
+		}
+		if(enemy.x >= 690){
+		    enemy.acceleration.x = -10;
+		}
+		if(enemy.y <= 10){
+		    enemy.acceleration.y = 10;
+		}
+		if(enemy.y >= 790){
+		    enemy.acceleration.y = -10;
+		}
 	    });
 
 
