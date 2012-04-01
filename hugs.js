@@ -263,8 +263,7 @@ function initialize(){
         enemies.add(enemy);
 	
         enemy.update = jsGame.extend(enemy.update, function(elapsed){
-		enemy.fuzzies -= 1;
-
+		enemy.fuzzies = Math.max(enemy.fuzzies - 1, 0);
 		if(enemy.fuzzies <= 15){
 		    enemy.state = 'fighting';
 		}
@@ -280,7 +279,7 @@ function initialize(){
 		    enemy.collisionRadius = 0;
 		    enemy.visible = false;
 		}
-		
+
 		else{
 		    if(enemy.state === 'fighting'){
 			if(enemy.fightTarget === undefined){
@@ -318,6 +317,36 @@ function initialize(){
   				else{
   				    enemy.attackTimer -= game.elapsed;
   				}
+			}
+		    }
+		    if((enemy.fightTarget === undefined) || (enemy.fightTarget.state ==='dead')){
+			enemy.fightTarget = undefined;
+			// Couldn't find a target, fall back to wandering, or enemy is dead.
+			enemy.state = 'wandering';
+		    }else{
+			if(enemy.attackTimer <= 0){
+			    var vec = [];
+			    vec.x = enemy.x - enemy.fightTarget.x;
+			    vec.y = enemy.y - enemy.fightTarget.y;
+			    
+			    var dist = Math.sqrt(vec.x * vec.x + vec.y * vec.y);
+			    
+			    if(dist != 0){
+				vec.x /= dist;
+				vec.y /= dist;
+			    }
+			    else{
+				vec.x = 0;
+				vec.y = -1;
+			    }
+
+			    if(dist <= 5){
+				enemy.fightTarget.health -= 1;
+				enemy.attackTimer = 5;
+			    }
+			    else{
+				enemy.attackTimer -= game.elapsed;
+			    }
 			}
 		    }
 		}
@@ -401,6 +430,7 @@ function initialize(){
 			}
 	    });
 
+
 	    enemy.render = function(context, camera){
     		context.fillStyle = "rgba(0,0,0,0.2)";
     		context.beginPath();
@@ -441,11 +471,11 @@ function initialize(){
     	};
     }
     for(var i = 0; i < 15; i++)
-    {
-        makeEnemy(Math.random()*700+50,Math.random()*500+50);
-    }
+	{
+	    makeEnemy(Math.random()*700+50,Math.random()*500+50);
+	}
     
     game.add(bg);
-
-	game.run();
+    
+    game.run();
 }
