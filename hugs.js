@@ -27,7 +27,7 @@ function initialize(){
 	timerText.text = "";
 	timerText.shadow = true;
 	timerText.font = "30pt arial bold";
-    game.add(timerText);
+	game.add(timerText);
 
 	// SFX
 	var deathcry = jsGame.Sound.load('./assets/deathcry.mp3');
@@ -44,7 +44,9 @@ function initialize(){
 	var pop = jsGame.Sound.load('./assets/pop.mp3');
 	var punch1 = jsGame.Sound.load('./assets/punch1.mp3');
 	var punch2 = jsGame.Sound.load('./assets/punch2.mp3');
-	var sigh = jsGame.Sound.load('./assets/sigheffect2.mp3');
+	var sigh = jsGame.Sound.load('./assets/sigh.mp3');
+	var failure = jsGame.Sound.load('./assets/failure.mp3');
+	var victory = jsGame.Sound.load('./assets/victory21.mp3');
 	
 	gonnagetcha1.volume = 0.7; gonnagetcha2.volume = 0.7; gonnagetcha3.volume = 0.7;
 	gonnagetcha4.volume = 0.7; gonnagetcha5.volume = 0.7; harpeffect.volume = 0.7;
@@ -122,7 +124,7 @@ function initialize(){
 
 	**/
 
-	for(var h = 0; h < 80; h++){
+	for(var h = 0; h < 40; h++){
 	    game.heartPool[h] = game.makeHeart();
 	    //	    game.powPool[h] = game.makePow();
 	    //	    game.heartPool[h] = game.makeHeart();
@@ -529,6 +531,8 @@ function initialize(){
         if(gameOverBg)
         {
             gameOverBg.fade += game.elapsed * 0.25;
+	    cuddleSad.pause();
+	    happySong2.pause();
         }
         if(!gameOver)
         {
@@ -537,6 +541,7 @@ function initialize(){
     			if(game.avgFuzz >= game.goal){
     			    //Good Ending
                     var s = jsGame.Sprite(165, 200);
+		    victory.play();
                     s.setImage("assets/win.png");
                     s.layer = 100;
                     game.add(s);
@@ -551,6 +556,7 @@ function initialize(){
     				//Bad Ending (Time up)
                     var s = jsGame.Sprite(281, 200);
                     s.setImage("assets/lose.png");
+		    failure.play();
                     s.layer = 100;
                     game.add(s);
                     gameOver = true;
@@ -570,6 +576,7 @@ function initialize(){
                   gameOver = true;
                   gameOverBg = jsGame.Sprite(0, 0);
                   gameOverBg.setImage("assets/deathbg.png");
+		  failure.play();
                   gameOverBg.fade = 0;
                   gameOverBg.layer = -1.5
                   game.add(gameOverBg);
