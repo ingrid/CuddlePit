@@ -111,7 +111,7 @@ function initialize(){
 	};
 
 	game.highMoodMark = 80;
-	game.goal = 75;
+	game.goal = 60;
 	game.lowMoodMark = 70;
 
 	game.mood = 'happy'; // On of happy or sad.
