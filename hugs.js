@@ -111,7 +111,7 @@ function initialize(){
 	};
 
 	game.highMoodMark = 80;
-	game.goal = 60;
+	game.goal = 75;
 	game.lowMoodMark = 70;
 
 	game.mood = 'happy'; // On of happy or sad.
@@ -382,6 +382,7 @@ function initialize(){
 
     game.avgFuzz = undefined;
 
+    
     // Average fuzzy level.
     game.update = jsGame.extend(game.update, function(){
 	    var totalFuzz = 0;
@@ -401,17 +402,32 @@ function initialize(){
 
 	});
 
-    // Level timer.
-    game.timer = 0;
-    game.levelTimeLimit = 40;
+    // Level timer and Game Over
+    game.numEnemies = 15;
+	game.minEnemiesToWin = Math.ceil(game.goal * game.numEnemies / 100);
+	game.timer = 0;
+    game.levelTimeLimit = 85;
+    
     game.update = jsGame.extend(game.update, function(){
-	    if(game.timer >= game.levelTimeLimit){
-		if(game.avgFuzz >= game.goal){
-		    // Win!
-		}else{
-		    // Loss!
+		game.numEnemiesAlive = game.numEnemies;
+		for(var f = 0; f < enemies.getChildren().length; f++){
+			var candidate = enemies.getChildren()[f];
+			if (candidate.state === 'dead')
+				game.numEnemiesAlive--;
 		}
-	    }else{
+
+	    if(game.timer >= game.levelTimeLimit){
+			if(game.avgFuzz >= game.goal){
+			    //Good Ending
+			    alert("You Win!  Fuzzzytime!");
+			}else{
+				//Bad Ending (Time up)
+			    alert("You Lose!  Poor penguin!");
+			}
+	    }else if(game.numEnemiesAlive < game.minEnemiesToWin){
+			//Bad Ending, too many died
+			alert("You Lose!  Too many Fluff Demons died!");
+		}else{
 		game.timer += game.elapsed;
 	    }
 	});
@@ -709,7 +725,8 @@ function initialize(){
     		}
     	};
     }
-    for(var i = 0; i < 15; i++)
+
+    for(var i = 0; i < game.numEnemies; i++)
 	{
 	    makeEnemy(Math.random()*700+50,Math.random()*500+50);
 	}
