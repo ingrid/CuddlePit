@@ -45,5 +45,5 @@ jsGame.includeModule("Animation");
 jsGame.includeModule("Debug");
 jsGame.includeModule("LevelMap");
 jsGame.includeModule("ColorKey");
-jsGame.includeModule("FlashSprite");
+//jsGame.includeModule("FlashSprite");
 jsGame.includeModule("Text");
