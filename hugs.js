@@ -21,6 +21,23 @@ window.onload = function(){
 function initialize(){
 	var game = jsGame.Game(800, 600);
 
+	// SFX
+	var deathcry = jsGame.Sound.load('./assets/deathcry.mp3');
+	var footstep2 = jsGame.Sound.load('./assets/footstep2.mp3');
+	footstep2.volume = 0.9;
+	var footstep1 = jsGame.Sound.load('./assets/footstep1.mp3');
+	footstep1.volume = 0.4;
+	var gonnagetcha1 = jsGame.Sound.load('./assets/gonnagetcha1.mp3');
+	var gonnagetcha2 = jsGame.Sound.load('./assets/gonnagetcha2.mp3');
+	var gonnagetcha3 = jsGame.Sound.load('./assets/gonnagetcha3.mp3');
+	var gonnagetcha4 = jsGame.Sound.load('./assets/gonnagetcha4.mp3');
+	var gonnagetcha5 = jsGame.Sound.load('./assets/gonnagetcha5.mp3');
+	var harpeffect = jsGame.Sound.load('./assets/harpeffect422.mp3');
+	var pop = jsGame.Sound.load('./assets/pop.mp3');
+	var punch1 = jsGame.Sound.load('./assets/punch1.mp3');
+	var punch2 = jsGame.Sound.load('./assets/punch2.mp3');
+	var sigh = jsGame.Sound.load('./assets/sigheffect2.mp3');
+
 	var happySong2 = jsGame.Sound.load('./assets/cuddlehappy2.wav');
 	happySong2.loop = true;
 	happySong2.play();
@@ -139,7 +156,7 @@ function initialize(){
 	var idleAnim = jsGame.Animation.Strip([0], 80, 80, 1.0);
 	var hugAnim = jsGame.Animation.Strip([7], 80, 80, 1.0);
 	player.playAnimation(walkAnim);
-    game.add(player);
+	game.add(player);
     
 	player.hugarms = {left: [{x:0, y:0}, {x:-10, y:-20}], right: [{x:0, y:0}, {x:10, y:-20}] };
 	player.hugging = false;
@@ -154,8 +171,10 @@ function initialize(){
 	player.angle = 0;
 	player.speed = 120;
 	player.collisionRadius = 25;
+	
+	player.currFrame = 1;
 
-    player.update = jsGame.extend(player.update, function(elapsed){
+	player.update = jsGame.extend(player.update, function(elapsed){
 	    player.velocity.x = 0;
 	    player.velocity.y = 0;
 
@@ -223,9 +242,11 @@ function initialize(){
         rightArmEnd = {x: rightArmStart.x + Math.sin(-rightArmAngle) * player.hugMagnitude, y: rightArmStart.y + -Math.cos(-rightArmAngle) * player.hugMagnitude}
         player.hugarms.left = [leftArmStart, leftArmEnd];
         player.hugarms.right = [rightArmStart, rightArmEnd];
+
 	    });
 
 	player.render = function(context, camera){
+
 
         context.lineCap = 'round';
 
@@ -271,6 +292,30 @@ function initialize(){
         context.arc(player.x + 5, player.y + 7, 25, 0, Math.PI*2, true);
         context.closePath();
         context.fill();
+
+	    var newFrame = player.frame.x / player.width;
+	    if((player.currFrame != newFrame) && ((newFrame === 2) || (newFrame === 5))){
+		if(Math.random() >= 0.5){
+		    footstep1.play();
+		    if(footstep1.currentTime > 0)
+		    {
+                footstep2.play();
+            }
+		}else{
+		    footstep2.play();
+		    if(footstep2.currentTime > 0)
+		    {
+                footstep1.play();
+            }
+		}
+	    }
+	    player.currFrame = newFrame;
+	    context.fillStyle = "rgba(0,0,0,0.2)";
+	    context.beginPath();
+	    context.arc(player.x + 5, player.y + 7, 25, 0, Math.PI*2, true);
+	    context.closePath();
+	    context.fill();
+
 		if(player.image !== null && player.visible){
 		    context.save();
 		    context.translate(player.x, player.y);
@@ -582,11 +627,14 @@ function initialize(){
 
 
 	    enemy.render = function(context, camera){
-    		context.fillStyle = "rgba(0,0,0,0.2)";
-    		context.beginPath();
-    		context.arc(enemy.x + 5, enemy.y + 7, 20, 0, Math.PI*2, true);
-    		context.closePath();
-    		context.fill();
+            if(enemy.health > 0)
+            {
+        		context.fillStyle = "rgba(0,0,0,0.2)";
+        		context.beginPath();
+        		context.arc(enemy.x + 5, enemy.y + 7, 20, 0, Math.PI*2, true);
+        		context.closePath();
+        		context.fill();
+            }
 
     		if(enemy.image !== null && enemy.visible){
     		    context.save();
@@ -603,22 +651,6 @@ function initialize(){
     				      enemy.height);
     			context.restore();
     		}
-
-            if(enemy.state == "wandering") { context.fillStyle="rgb(0,255,0)"; }
-            if(enemy.state == "fighting") { context.fillStyle="rgb(255,0,0)"; }
-            if(enemy.state == "dead") { context.fillStyle="rgb(0,0,0)"; }
-            context.fillRect(enemy.x, enemy.y, 5,5);
-
-            if(enemy.fightTarget && enemy.state == "fighting")
-            {
-              context.lineWidth = 1;
-              context.strokeStyle = "rgb(255,0,0)";
-              context.beginPath();
-              context.moveTo(enemy.x, enemy.y);
-              context.lineTo(enemy.fightTarget.x, enemy.fightTarget.y);
-              context.closePath();
-              context.stroke();
-            }
     	};
     }
     for(var i = 0; i < 15; i++)
