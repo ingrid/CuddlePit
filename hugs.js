@@ -21,6 +21,23 @@ window.onload = function(){
 function initialize(){
 	var game = jsGame.Game(800, 600);
 
+	// SFX
+	var deathcry = jsGame.Sound.load('./assets/deathcry.mp3');
+	var footstep2 = jsGame.Sound.load('./assets/footstep2.mp3');
+	footstep2.volume = 0.5;
+	var footstep1 = jsGame.Sound.load('./assets/footstep1.mp3');
+	footstep1.volume = 0.2;
+	var gonnagetcha1 = jsGame.Sound.load('./assets/gonnagetcha1.mp3');
+	var gonnagetcha2 = jsGame.Sound.load('./assets/gonnagetcha2.mp3');
+	var gonnagetcha3 = jsGame.Sound.load('./assets/gonnagetcha3.mp3');
+	var gonnagetcha4 = jsGame.Sound.load('./assets/gonnagetcha4.mp3');
+	var gonnagetcha5 = jsGame.Sound.load('./assets/gonnagetcha5.mp3');
+	var harpeffect = jsGame.Sound.load('./assets/harpeffect422.mp3');
+	var pop = jsGame.Sound.load('./assets/pop.mp3');
+	var punch1 = jsGame.Sound.load('./assets/punch1.mp3');
+	var punch2 = jsGame.Sound.load('./assets/punch2.mp3');
+	var sigh = jsGame.Sound.load('./assets/sigheffect2.mp3');
+
 	var happySong2 = jsGame.Sound.load('./assets/cuddlehappy2.wav');
 	happySong2.loop = true;
 	happySong2.play();
@@ -138,7 +155,7 @@ function initialize(){
 	var walkAnim = jsGame.Animation.Strip([1, 2, 3, 4, 5, 6], 80, 80, 7.0);
 	var idleAnim = jsGame.Animation.Strip([0], 80, 80, 1.0);
 	player.playAnimation(walkAnim);
-    game.add(player);
+	game.add(player);
     
 	player.hugarms = {left: [{x:0, y:0}, {x:-10, y:-20}], right: [{x:0, y:0}, {x:10, y:-20}] };
 	player.hugging = false;
@@ -153,8 +170,10 @@ function initialize(){
 	player.angle = 0;
 	player.speed = 120;
 	player.collisionRadius = 25;
+	
+	player.currFrame = 1;
 
-    player.update = jsGame.extend(player.update, function(elapsed){
+	player.update = jsGame.extend(player.update, function(elapsed){
 	    player.velocity.x = 0;
 	    player.velocity.y = 0;
 
@@ -215,14 +234,24 @@ function initialize(){
         rightArmEnd = {x: rightArmStart.x + Math.sin(-rightArmAngle) * player.hugMagnitude, y: rightArmStart.y + -Math.cos(-rightArmAngle) * player.hugMagnitude}
         player.hugarms.left = [leftArmStart, leftArmEnd];
         player.hugarms.right = [rightArmStart, rightArmEnd];
+
 	    });
 
 	player.render = function(context, camera){
-        context.fillStyle = "rgba(0,0,0,0.2)";
-        context.beginPath();
-        context.arc(player.x + 5, player.y + 7, 25, 0, Math.PI*2, true);
-        context.closePath();
-        context.fill();
+	    var newFrame = player.frame.x / player.width;
+	    if((player.currFrame != newFrame) && ((newFrame === 2) || (newFrame === 5))){
+		if(Math.random() >= 0.5){
+		    footstep1.play();
+		}else{
+		    footstep2.play();
+		}
+	    }
+	    player.currFrame = newFrame;
+	    context.fillStyle = "rgba(0,0,0,0.2)";
+	    context.beginPath();
+	    context.arc(player.x + 5, player.y + 7, 25, 0, Math.PI*2, true);
+	    context.closePath();
+	    context.fill();
 		if(player.image !== null && player.visible){
 		    context.save();
 		    context.translate(player.x, player.y);
