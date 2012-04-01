@@ -74,8 +74,11 @@ function initialize(){
 
 	game._canvas.onmousedown = function(e)
 	{
-        justClicked = true;
-    }
+	    justClicked = true;
+	    for(var h = 0; h < enemies.getChildren().length; h++){
+		enemies.getChildren()[h].hugged = false;
+	    }
+	}
 
     var player = jsGame.Sprite(300, 150);
 
@@ -91,26 +94,26 @@ function initialize(){
     
 	player.hugarms = {left: [{x:0, y:0}, {x:-10, y:-20}], right: [{x:0, y:0}, {x:10, y:-20}] };
 	player.hugging = false;
-    player.hugMagnitude = 0;
-    player.hugMagSpeed = 360;
-    player.hugAngleSpeed = 3.0;
-    player.hugMaxMagnitude = 100;
-    player.hugStartAngle = Math.PI / 4;
-    player.hugAngle = 0;
-    player.hugMinAngle = -0.2
+	player.hugMagnitude = 0;
+	player.hugMagSpeed = 360;
+	player.hugAngleSpeed = 3.0;
+	player.hugMaxMagnitude = 100;
+	player.hugStartAngle = Math.PI / 4;
+	player.hugAngle = 0;
+	player.hugMinAngle = -0.2;
     
 	player.angle = 0;
 	player.speed = 120;
 	player.collisionRadius = 25;
 
     player.update = jsGame.extend(player.update, function(elapsed){
-		player.velocity.x = 0;
-		player.velocity.y = 0;
+	    player.velocity.x = 0;
+	    player.velocity.y = 0;
 
-		// This math might be terrible, should also be moved to mouse listener.
-		var vec = [];
-		vec.x = player.x - guide.x;
-		vec.y = player.y - guide.y;
+	    // This math might be terrible, should also be moved to mouse listener.
+	    var vec = [];
+	    vec.x = player.x - guide.x;
+	    vec.y = player.y - guide.y;
 	    var dist = Math.sqrt(vec.x * vec.x + vec.y * vec.y);
 
         if(dist != 0)
@@ -256,6 +259,8 @@ function initialize(){
 	enemy.state = 'wandering';
 	enemy.aggroRadius = 50;
 	enemy.attackTimer = 0;
+	enemy.hugged = false;
+	enemy.fuzzyTimer = 1;
 
     	enemy.speed = 70;
     	enemy.collisionRadius = 10;
@@ -263,7 +268,12 @@ function initialize(){
         enemies.add(enemy);
 	
         enemy.update = jsGame.extend(enemy.update, function(elapsed){
-		enemy.fuzzies = Math.max(enemy.fuzzies - 1, 0);
+		if(enemy.fuzzyTimer <= 0){
+		    enemy.fuzzies = Math.max(enemy.fuzzies - 2, 0);
+		    enemy.fuzzyTimer = 1
+		}else{
+		    enemy.fuzzyTimer -= game.elapsed;
+		}
 		if(enemy.fuzzies <= 15){
 		    enemy.state = 'fighting';
 		}
@@ -422,6 +432,10 @@ function initialize(){
 						enemy.targetX = player.x;
 						enemy.targetY = player.y;
 						enemy.collisionRadius = 3;
+						if(enemy.hugged === false){
+						    enemy.hugged = true;
+						    enemy.fuzzies = Math.min(enemy.fuzzies + 50, 100);
+						}
 					    }
 				    }
 			    }
