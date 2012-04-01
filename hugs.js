@@ -110,9 +110,9 @@ function initialize(){
 	    }
 	};
 
-	game.highMoodMark = 80;
+	game.highMoodMark = 70;
 	game.goal = 60;
-	game.lowMoodMark = 70;
+	game.lowMoodMark = 60;
 
 	game.mood = 'happy'; // On of happy or sad.
 	
@@ -445,7 +445,7 @@ function initialize(){
     	enemy.targetY = 0;
 
 	//Default Enemy starting state
-	enemy.fuzzies = 60 + Math.random() * 20;
+	enemy.fuzzies = 65 + Math.random() * 30;
 	enemy.health = 100;
 	enemy.state = 'wandering';
 	enemy.aggroRadius = 20;
@@ -469,7 +469,7 @@ function initialize(){
 		}
 
 		//Enemy Irritated state
-		if(enemy.fuzzies <= 70 && enemy.fuzzies > 25)
+		if(enemy.fuzzies <= 70 && enemy.fuzzies > 40)
 		{
             enemy.setImage('./assets/fluff2.png', 80, 80);
         }
@@ -481,13 +481,13 @@ function initialize(){
         }
         
         //Enemy Angry State
-        if(enemy.fuzzies < 25)
+        if(enemy.fuzzies <= 40)
         {
             enemy.setImage('./assets/fluff3.png', 80, 80);
         }
 
 		//When an enemy fights
-		if(enemy.fuzzies <= 70){
+		if(enemy.fuzzies <= 40){
 		    enemy.state = 'fighting';
 		}
 		else{
@@ -539,8 +539,8 @@ function initialize(){
   				var dy = enemy.y - enemy.fightTarget.y;
 
   				if(dx*dx+dy*dy <= 35*35 && enemy.attackTimer <= 0){
-  				    enemy.fightTarget.health -= 10;
-  				    enemy.fuzzies -= 5;
+  				    enemy.fightTarget.health -= 7;
+  				    enemy.fuzzies -= 7;
   				    //alert(enemy.fightTarget.health);
   				    enemy.attackTimer = 1.5;
   				    if(Math.random() > 0.5)
