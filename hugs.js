@@ -1,7 +1,4 @@
 window.onload = function(){
-    jsGame.Sound.load('./assets/cuddlehappy2.wav');
-    jsGame.Sound.load('./assets/cuddlesad.mp3');
-    //initialize();
     var titleGame = jsGame.Game(800, 600);
     
     var titleImg = jsGame.Sprite(0, 0);
@@ -38,11 +35,11 @@ function initialize(){
 	var punch2 = jsGame.Sound.load('./assets/punch2.mp3');
 	var sigh = jsGame.Sound.load('./assets/sigheffect2.mp3');
 
-	var happySong2 = jsGame.Sound.load('./assets/cuddlehappy2.wav');
+	var happySong2 = jsGame.Sound.load('./assets/cuddlepitmusicbright.mp3');
 	happySong2.loop = true;
 	happySong2.play();
 
-	var cuddleSad = jsGame.Sound.load('./assets/cuddlesad.mp3');
+	var cuddleSad = jsGame.Sound.load('./assets/cuddlepitmusicdark.mp3');
 	cuddleSad.loop = true;
 	cuddleSad.volume = 0;
 	cuddleSad.play();
